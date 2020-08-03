@@ -1,0 +1,10 @@
+name: minecraft-dnd
+version: 1.0.0
+main: com.degraffa.mcdnd.MCDnD
+api-version: 1.16
+commands:
+  roll:
+    description: Rolls a specified dice roll using d20 notation.
+    usage: "Usage: /roll [insert dice notation here]"
+    permission: mcdnd.roll
+    permission-message: You do not have permission to roll!
