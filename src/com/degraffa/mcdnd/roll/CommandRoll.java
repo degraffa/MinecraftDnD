@@ -257,11 +257,18 @@ public class CommandRoll implements CommandExecutor {
     
     // Creates a dice roll component from an argument representing one (ex. 1d20)
     private RollComponentDice rollComponentDiceFromString(String arg) {
+
         int dCharIdx = arg.indexOf('d');
-        String numDiceString = arg.substring(0, dCharIdx);
+        int numDice;
+        if (dCharIdx == 0) {
+            numDice = 1;
+        } else {
+            String numDiceString = arg.substring(0, dCharIdx);
+            numDice = Integer.parseInt(numDiceString);
+        }
+
         String numSidesString = arg.substring(dCharIdx+1);
-        
-        int numDice = Integer.parseInt(numDiceString);
+
         int numSides = Integer.parseInt(numSidesString);
         
         return new RollComponentDice(numDice, numSides);
@@ -341,7 +348,7 @@ public class CommandRoll implements CommandExecutor {
     public static void main(String[] args) {
         CommandRoll cr = new CommandRoll();
 
-        String[] testStrings = {"1d20"};
+        String[] testStrings = {"d20"};
 
         // step 1: Separate into distinct chunks
         ArrayList<String> arguments = cr.processArguments(testStrings);
