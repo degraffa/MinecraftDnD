@@ -47,6 +47,7 @@ public class RollComponentDice extends RollComponent {
         for (int i = 0; i < numDice; i++) {
             int rollValue = rollDie();
 
+            rollTotal += rollValue;
             rolls.add(rollValue);
         }
 

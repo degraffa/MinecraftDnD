@@ -263,7 +263,6 @@ public class CommandRoll implements CommandExecutor {
         
         int numDice = Integer.parseInt(numDiceString);
         int numSides = Integer.parseInt(numSidesString);
-        System.out.println(numSides);
         
         return new RollComponentDice(numDice, numSides);
     }
@@ -340,7 +339,6 @@ public class CommandRoll implements CommandExecutor {
     }
 
     public static void main(String[] args) {
-        System.out.println("Test");
         CommandRoll cr = new CommandRoll();
 
         String[] testStrings = {"1d20"};
