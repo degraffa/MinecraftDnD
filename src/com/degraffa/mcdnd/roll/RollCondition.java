@@ -1,6 +1,6 @@
 package com.degraffa.mcdnd.roll;
 
-// A condition for dice rolls!
+// Represents a condition for dice rolls
 public class RollCondition {
     // The type of condition
     RollConditionType type;

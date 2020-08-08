@@ -1,6 +1,7 @@
 package com.degraffa.mcdnd.test;
 
-import com.degraffa.mcdnd.roll.DiceRoll;
+import com.degraffa.mcdnd.roll.Roll;
+import com.degraffa.mcdnd.roll.RollOperation;
 import org.junit.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -8,8 +9,8 @@ import static org.junit.jupiter.api.Assertions.*;
 class CommandRollTest {
     @Test
     public void testSingleRoll() {
-        DiceRoll diceRoll = new DiceRoll();
-        diceRoll.addDiceSet(1, 6);
+        Roll diceRoll = new Roll();
+        diceRoll.addRollComponent(1, 6, RollOperation.Add);
 
         int rollValue = diceRoll.rollDice().get(0).getRollTotal();
 

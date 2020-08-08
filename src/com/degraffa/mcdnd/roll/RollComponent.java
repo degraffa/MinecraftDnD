@@ -3,15 +3,15 @@ package com.degraffa.mcdnd.roll;
 import java.util.ArrayList;
 import java.util.concurrent.ThreadLocalRandom;
 
-// A set of dice which all have the same number of sides which can be rolled with conditions applied to each roll
-public class DiceSet {
+// Represents a component of a dice roll
+public class RollComponent {
     private int numDice;
     private int numSides;
 
     // conditions types
     private ArrayList<RollCondition> conditions;
 
-    public DiceSet(int numDice, int numSides) {
+    public RollComponent(int numDice, int numSides) {
         setDice(numDice, numSides);
         conditions = new ArrayList<>();
     }
@@ -27,6 +27,9 @@ public class DiceSet {
     public void setConditions(ArrayList<RollCondition> conditions) { this.conditions = conditions; }
     public void addCondition(RollConditionType conditionType, int conditionValue) {
         conditions.add(new RollCondition(conditionType, conditionValue));
+    }
+    public void addCondition(RollCondition condition) {
+        conditions.add(condition);
     }
 
     // rolls a single die
