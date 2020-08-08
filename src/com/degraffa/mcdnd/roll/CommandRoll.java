@@ -240,15 +240,15 @@ public class CommandRoll implements CommandExecutor {
 
         // add left half of equation
         if (caseOne || caseThree) {
-            String left = arg.substring(0, opIdx-1);
+            String left = arg.substring(0, opIdx);
             splitArgs.add(left);
         }
         // add operator
-        String op = arg.substring(opIdx, opIdx);
+        String op = arg.substring(opIdx, opIdx+1);
         splitArgs.add(op);
         // add right half of the equation
         if (caseOne || caseTwo) {
-            String right = arg.substring(opIdx+1, arg.length()-1);
+            String right = arg.substring(opIdx+1);
             splitArgs.add(right);
         }
 
@@ -258,11 +258,12 @@ public class CommandRoll implements CommandExecutor {
     // Creates a dice roll component from an argument representing one (ex. 1d20)
     private RollComponentDice rollComponentDiceFromString(String arg) {
         int dCharIdx = arg.indexOf('d');
-        String numDiceString = arg.substring(0, dCharIdx-1);
-        String numSidesString = arg.substring(dCharIdx+1, arg.length()-1);
+        String numDiceString = arg.substring(0, dCharIdx);
+        String numSidesString = arg.substring(dCharIdx+1);
         
         int numDice = Integer.parseInt(numDiceString);
         int numSides = Integer.parseInt(numSidesString);
+        System.out.println(numSides);
         
         return new RollComponentDice(numDice, numSides);
     }
@@ -341,5 +342,24 @@ public class CommandRoll implements CommandExecutor {
     public static void main(String[] args) {
         System.out.println("Test");
         CommandRoll cr = new CommandRoll();
+
+        String[] testStrings = {"1d20"};
+
+        // step 1: Separate into distinct chunks
+        ArrayList<String> arguments = cr.processArguments(testStrings);
+
+        // Step 2: Determine what kind of argument each argument is
+        ArrayList<RollArgumentType> argumentTypes = cr.getArgumentTypes(arguments);
+
+        // Step 4: Get the roll command from the arguments
+        Roll roll = cr.getRollFromArguments(arguments, argumentTypes);
+
+        // Step 5: Roll the dice and remember the results
+        ArrayList<RollSet> rollSets = roll.roll();
+
+        // Step 6: Create the string to print to the command sender
+        String rollString = cr.getRollString(rollSets);
+
+        System.out.println(rollString);
     }
 }

@@ -50,9 +50,8 @@ public class RollComponentDice extends RollComponent {
             rolls.add(rollValue);
         }
 
-        // apply each condition to each dice roll
-        for (int i = 0; i < numDice; i++) {
-            RollCondition condition = conditions.get(i);
+        // for each condition, apply it to the rolls
+        for (RollCondition condition : conditions) {
             applyConditions(condition, rolls);
         }
 
