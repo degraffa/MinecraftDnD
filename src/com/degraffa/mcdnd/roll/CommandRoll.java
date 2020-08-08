@@ -320,6 +320,7 @@ public class CommandRoll implements CommandExecutor {
             RollSet rollSet = rollSets.get(i);
             if (rollSet.isConstant()) {
                 constantSum += rollSet.getRollValue();
+                continue;
             }
 
             sb.append("[");
@@ -336,8 +337,8 @@ public class CommandRoll implements CommandExecutor {
 
             sb.append("]");
 
-            // if there are more rollsets after this, add a comma
-            if (i != rollSets.size() - 1) {
+            // if there are more non-constnat rollsets after this, add a comma
+            if (i != rollSets.size() - 1 && !rollSets.get(i+1).isConstant()) {
                 sb.append(", ");
             }
         }
@@ -354,14 +355,10 @@ public class CommandRoll implements CommandExecutor {
         return sb.toString();
     }
 
-    private String getSyntaxError(CommandSender sender, ArrayList<String> args, int badArgIdx, int badCharIdx) {
-        return "Improper roll syntax!"; // TODO: Show where they fucked up
-    }
-
     public static void main(String[] args) {
         CommandRoll cr = new CommandRoll();
 
-        String[] testStrings = {"20"};
+        String[] testStrings = {"1d100+2"};
 
         // step 1: Separate into distinct chunks
         ArrayList<String> arguments = cr.processArguments(testStrings);
