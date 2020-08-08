@@ -314,8 +314,14 @@ public class CommandRoll implements CommandExecutor {
         String rollString = "Roll: ";
         StringBuilder sb = new StringBuilder(rollString);
 
+        int constantSum = 0;
+
         for (int i = 0; i < rollSets.size(); i++) {
             RollSet rollSet = rollSets.get(i);
+            if (rollSet.isConstant()) {
+                constantSum += rollSet.getRollValue();
+            }
+
             sb.append("[");
 
             for (int j = 0; j < rollSet.getRolls().size(); j++) {
@@ -336,7 +342,14 @@ public class CommandRoll implements CommandExecutor {
             }
         }
 
-        sb.append(" Result: ").append(rollTotal);
+        if (constantSum != 0) {
+            if (constantSum < 0) sb.append(" - ");
+            else sb.append(" + ");
+
+            sb.append(constantSum);
+        }
+
+        sb.append("\nResult: ").append(rollTotal);
 
         return sb.toString();
     }
@@ -348,7 +361,7 @@ public class CommandRoll implements CommandExecutor {
     public static void main(String[] args) {
         CommandRoll cr = new CommandRoll();
 
-        String[] testStrings = {"d20"};
+        String[] testStrings = {"20"};
 
         // step 1: Separate into distinct chunks
         ArrayList<String> arguments = cr.processArguments(testStrings);
