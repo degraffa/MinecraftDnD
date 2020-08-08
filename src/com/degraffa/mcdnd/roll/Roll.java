@@ -5,42 +5,38 @@ import java.util.ArrayList;
 // Represents a complete roll command
 public class Roll {
     private ArrayList<RollComponent> rollComponents;
-    private ArrayList<RollOperation> rollOperations;
 
     public Roll() {
         rollComponents = new ArrayList<>();
     }
-    public Roll(ArrayList<RollComponent> rollComponents, ArrayList<RollOperation> rollOperations) {
-        addRollComponents(rollComponents, rollOperations);
+    public Roll(ArrayList<RollComponent> rollComponents) {
+        addRollComponents(rollComponents);
     }
 
     public ArrayList<RollComponent> getRollComponents() { return rollComponents; }
-    public ArrayList<RollOperation> getRollOperations() { return rollOperations; }
 
-    public void addRollComponents(ArrayList<RollComponent> rollComponents, ArrayList<RollOperation> rollOperations) {
+    public void addRollComponents(ArrayList<RollComponent> rollComponents) {
         this.rollComponents = rollComponents;
-        this.rollOperations = rollOperations;
     }
     // must add an operation with the component
-    public void addRollComponent(RollComponent rollComponent, RollOperation op) {
+    public void addRollComponent(RollComponent rollComponent) {
         rollComponents.add(rollComponent);
-        rollOperations.add(op);
     }
     public void addRollComponent(int numDice, int numSides, ArrayList<RollCondition> conditions, RollOperation op) {
-        RollComponent rollComponent = new RollComponent(numDice, numSides);
+        RollComponentDice rollComponentDice = new RollComponentDice(numDice, numSides);
 
         for (int i = 0; i < conditions.size(); i++) {
-            rollComponent.getConditions().add(conditions.get(i));
+            rollComponentDice.getConditions().add(conditions.get(i));
         }
 
-        addRollComponent(rollComponent, op);
+        addRollComponent(rollComponentDice);
     }
     public void addRollComponent(int numDice, int numSides, RollOperation op) {
         addRollComponent(numDice, numSides, new ArrayList<RollCondition>(), op);
     }
 
-
-    public ArrayList<RollSet> rollDice() {
+    // rolls the dice and adds each of them
+    public ArrayList<RollSet> roll() {
         ArrayList<RollSet> rollSets = new ArrayList<>();
 
         for (int i = 0; i < rollComponents.size(); i++) {
@@ -48,9 +44,9 @@ public class Roll {
             ArrayList<Integer> rolls = new ArrayList<>();
 
             RollComponent rollComponent = rollComponents.get(i);
-            RollSet rollSet = rollComponent.rollAll();
+            RollSet rollSet = rollComponent.roll();
 
-            rollTotal += rollSet.getRollTotal();
+            rollTotal += rollSet.getRollValue();
             rolls.addAll(rollSet.getRolls());
 
             rollSets.add(new RollSet(rollTotal, rolls));

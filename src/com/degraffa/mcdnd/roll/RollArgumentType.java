@@ -1,7 +1,8 @@
 package com.degraffa.mcdnd.roll;
 
 public enum RollArgumentType {
-    RollComponent,
+    DiceComponent,
+    ConstantComponent,
     Condition,
-    Operation
+    Operation,
 }

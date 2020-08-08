@@ -6,16 +6,28 @@ import java.util.ArrayList;
 
 // A set of rolls
 public class RollSet {
-    private int rollTotal;
+    // the total value of the roll
+    private int rollValue;
+    // list of each of the rolls
     private ArrayList<Integer> rolls;
 
-    RollSet(int rollTotal, ArrayList<Integer> rolls) {
+    public RollSet(int rollValue, ArrayList<Integer> rolls) {
         this.rolls = rolls;
-        this.rollTotal = rollTotal;
+        this.rollValue = rollValue;
     }
 
-    public int getRollTotal() {
-        return rollTotal;
+    public RollSet(int constant) {
+        this.rollValue = constant;
+        this.rolls = new ArrayList<Integer>();
+    }
+
+    public int getRollValue() {
+        return rollValue;
+    }
+
+    // determines whether this roll set is from a constant or randomly generated
+    public boolean isConstant() {
+        return this.rolls.size() == 0;
     }
 
     public ArrayList<Integer> getRolls() {

@@ -70,17 +70,36 @@ public class CommandRoll implements CommandExecutor {
         //      - u: All rolls will be unique. If more die are rolled than there are faces, this command will fail.
         //          - Cannot have any other conditions
 
-        Roll roll = processArguments(strings);
+        // step 1: Separate into distinct chunks
+        ArrayList<String> arguments = processArguments(strings);
 
-        ArrayList<RollSet> rollSets = roll.rollDice();
+        // Step 2: Determine what kind of argument each argument is
+        ArrayList<RollArgumentType> argumentTypes = getArgumentTypes(arguments);
 
-        getRollString(rollSets);
+        // TODO: Step 3: Verify that the arguments are syntactically correct
+        boolean goodSyntax = verifyArgumentSyntax(arguments, argumentTypes);
+        // end early if the syntax is bad
+        if (!goodSyntax) {
+            commandSender.sendMessage("Incorrect roll syntax");
+            return false;
+        }
+
+        // Step 4: Get the roll command from the arguments
+        Roll roll = getRollFromArguments(arguments, argumentTypes);
+
+        // Step 5: Roll the dice and remember the results
+        ArrayList<RollSet> rollSets = roll.roll();
+
+        // Step 6: Create the string to print to the command sender
+        String rollString = getRollString(rollSets);
+
+        // Step 7: Send the roll string to the command sender
+        commandSender.sendMessage(rollString);
 
         return true;
     }
 
-    private Roll processArguments(String[] strings) {
-        // step 1: Seperate into distinct chunks
+    private ArrayList<String> processArguments(String[] strings) {
         ArrayList<String> args = new ArrayList<>();
         // for each argument, split it up into its distinct parts to simplify later processing
         for (int i = 0; i < strings.length; i++) {
@@ -89,51 +108,10 @@ public class CommandRoll implements CommandExecutor {
             args.addAll(splitArgs);
         }
 
-        // Step 2: Find each of the components of the dice roll, and determine how to combine them with operations
-        ArrayList<RollComponent> rollComponents = new ArrayList<>();
-        // track whether we should add or subtract each roll component
-        ArrayList<RollOperation> rollOperations = new ArrayList<>();
-        // The first operation is always to add
-        rollOperations.add(RollOperation.Add);
-        
-        
-        for (int i = 0; i < strings.length; i++) {
-            String s = strings[i];
-            RollArgumentType argType = getRollArgType(s);
-
-            switch (argType) {
-                case RollComponent:
-                    RollComponent rollComponent = rollComponentFromString(s);
-                    rollComponents.add(rollComponent);
-                    break;
-                case Condition:
-                    RollCondition rollCondition = rollConditionFromString(s);
-                    
-                    // do nothing if there aren't any components before this
-                    if (rollComponents.size() == 0) break;
-
-                    // add this condition to the previously added roll component
-                    rollComponents.get(rollComponents.size()-1).addCondition(rollCondition);
-                    break;
-                case Operation:
-                    RollOperation rollOp = rollOperationFromString(s);
-                    
-                    // If we already added an operation for this component, combine the two
-                    if (rollOperations.size() > rollComponents.size()) {
-                        RollOperation lastRollOp = rollOperations.get(rollOperations.size()-1);
-                        
-                    }
-                    // Otherwise, add this operation
-                    rollOperations.add(rollOp);
-                    break;
-            }
-        }
-        
-        // Create a dice roll from this list of components and operations
-
-        return new Roll();
+        return args;
     }
 
+    // Splits a single argument into its individual pieces
     private ArrayList<String> splitArgument(String arg) {
         ArrayList<String> splitArgs = new ArrayList<>();
 
@@ -151,6 +129,99 @@ public class CommandRoll implements CommandExecutor {
         }
 
         return splitArgs;
+    }
+
+    private ArrayList<RollArgumentType> getArgumentTypes(ArrayList<String> args) {
+//        ArrayList<RollComponent> rollComponents = new ArrayList<>();
+        ArrayList<RollArgumentType> argumentTypes = new ArrayList<>();
+
+        for (int i = 0; i < args.size(); i++) {
+            String arg = args.get(i);
+            RollArgumentType argType = getRollArgType(arg);
+            argumentTypes.add(argType);
+        }
+
+        return argumentTypes;
+    }
+
+    private RollArgumentType getRollArgType(String arg) {
+        char charOne = arg.charAt(0);
+
+        // 4 Cases for each string:
+        // 1: A new dice roll component
+        for (char c : arg.toCharArray()) {
+            if (c == 'd') return RollArgumentType.DiceComponent;
+        }
+
+        // 2: A new constant roll component
+        boolean isConstant = true;
+        for (char c : arg.toCharArray()) {
+            if (!Character.isDigit(c)) isConstant = false;
+        }
+        if (isConstant) return RollArgumentType.ConstantComponent;
+
+        // 3: A roll operation
+        if (charOne == '+' || charOne == '-') return RollArgumentType.Operation;
+
+        // 4: A condition on the previous dice roll component
+        // If nothing else returned, assume it is a condition
+        return RollArgumentType.Condition;
+    }
+
+    // Returns true if each of the arguments is syntactically correct, false otherwise
+    private boolean verifyArgumentSyntax(ArrayList<String> args, ArrayList<RollArgumentType> argumentTypes) {
+        return true;
+    }
+
+    // Creates a Roll object from given arguments
+    private Roll getRollFromArguments(ArrayList<String> args, ArrayList<RollArgumentType> argumentTypes) {
+        ArrayList<RollComponent> rollComponents = new ArrayList<>();
+
+        for (int i = 0; i < args.size(); i++) {
+            String arg = args.get(i);
+            RollArgumentType argType = getRollArgType(arg);
+
+            switch (argType) {
+                case DiceComponent:
+                    RollComponentDice rollComponent = rollComponentDiceFromString(arg);
+                    rollComponents.add(rollComponent);
+                    break;
+                case ConstantComponent:
+                    RollComponentConstant rollComponentConstant = rollComponentConstantFromString(arg);
+                    rollComponents.add(rollComponentConstant);
+                    break;
+                case Condition:
+                    RollCondition rollCondition = rollConditionFromString(arg);
+
+                    // do nothing if there aren't any components before this
+                    if (rollComponents.size() == 0) break;
+
+                    // the last roll component should be a dice roll. If it's a constant, do nothing.
+                    RollComponent lastComponent = rollComponents.get(rollComponents.size()-1);
+                    if (!(lastComponent instanceof RollComponentDice)) break;
+
+                    // cast the component to a dice roll component since we know it has to be one
+                    RollComponentDice rollComponentDice = (RollComponentDice)lastComponent;
+                    rollComponentDice.addCondition(rollCondition);
+
+                    // Replace the last component with the same one but with the added condition
+                    rollComponents.set(rollComponents.size()-1, rollComponentDice);
+                    break;
+                case Operation:
+                    RollOperation rollOp = rollOperationFromString(arg);
+
+                    // only need to change the operation if this is subtract
+                    if (rollOp == RollOperation.Subtract) {
+                        RollComponent lastRollComponent = rollComponents.get(rollComponents.size()-1);
+                        lastRollComponent.setRollOperation(rollOp);
+                        rollComponents.set(rollComponents.size()-1, lastRollComponent);
+                    }
+
+                    break;
+            }
+        }
+
+        return new Roll(rollComponents);
     }
 
     // assumes '+' or '-' will be in the string at index [opIdx] in [arg]
@@ -183,18 +254,9 @@ public class CommandRoll implements CommandExecutor {
 
         return splitArgs;
     }
-
-    private RollArgumentType getRollArgType(String arg) {
-        // 3 Cases for each string:
-        // 1: A new roll component
-        // 2: A condition on the previous roll component
-        // 3: A roll operation
-
-        return RollArgumentType.RollComponent;
-    }
     
     // Creates a dice roll component from an argument representing one (ex. 1d20)
-    private RollComponent rollComponentFromString(String arg) {
+    private RollComponentDice rollComponentDiceFromString(String arg) {
         int dCharIdx = arg.indexOf('d');
         String numDiceString = arg.substring(0, dCharIdx-1);
         String numSidesString = arg.substring(dCharIdx+1, arg.length()-1);
@@ -202,7 +264,14 @@ public class CommandRoll implements CommandExecutor {
         int numDice = Integer.parseInt(numDiceString);
         int numSides = Integer.parseInt(numSidesString);
         
-        return new RollComponent(numDice, numSides);
+        return new RollComponentDice(numDice, numSides);
+    }
+
+    // Creates a constant roll component from string representing one (ex. 50)
+    private RollComponentConstant rollComponentConstantFromString(String arg) {
+        int constant = Integer.parseInt(arg);
+
+        return new RollComponentConstant(constant);
     }
     
     // Creates a condition from an argument representing one (ex. D3)
@@ -232,7 +301,7 @@ public class CommandRoll implements CommandExecutor {
         int rollTotal = 0;
 
         for (int i = 0; i < rollSets.size(); i++) {
-            rollTotal += rollSets.get(i).getRollTotal();
+            rollTotal += rollSets.get(i).getRollValue();
         }
 
         String rollString = "Roll: ";
@@ -272,20 +341,5 @@ public class CommandRoll implements CommandExecutor {
     public static void main(String[] args) {
         System.out.println("Test");
         CommandRoll cr = new CommandRoll();
-
-//      TESTING processArguments
-        String[] strings = {"1d20"};
-        Roll roll = cr.processArguments(strings);
-
-        // TESTING CommandRoll
-//        ArrayList<RollSet> testRollSets = new ArrayList<>();
-//        ArrayList<Integer> testRolls1 = new ArrayList<>();
-//        testRolls1.add(10);
-//        testRolls1.add(15);
-//        RollSet testRollSet1 = new RollSet(25, testRolls1);
-//        testRollSets.add(testRollSet1);
-//
-
-//        System.out.println(cr.getRollString(testRollSets));
     }
 }

@@ -12,7 +12,7 @@ class CommandRollTest {
         Roll diceRoll = new Roll();
         diceRoll.addRollComponent(1, 6, RollOperation.Add);
 
-        int rollValue = diceRoll.rollDice().get(0).getRollTotal();
+        int rollValue = diceRoll.roll().get(0).getRollValue();
 
         assertTrue(rollValue >= 1 && rollValue <= 6);
     }
