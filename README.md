@@ -27,10 +27,12 @@ Unless otherwise noted, bold letters like **A** and **X** represent integers
     - Pattern: +/- in between dice sets
 - 3d8H - Rolls three 8 sided dice and drops the highest result
     - Pattern 1: [h/H] after a dice set
-    - Pattern 2: [h/H]**X** after a dice set.
+    - Pattern 2: [h/H]**X** after a dice set
+        - Drops the highest **X** rolls
 - 4d6L - Rolls four 6 sided dice and drops the lowest result
     - Pattern 1: [l/L] after dice set
     - Pattern 2: [l/L]**X** after dice set
+        - Drops the lowest **X** rolls
 - +d20 - Rolls a 20 sided die at advantage
     - Pattern: +d**X**
     - Macro for 2d**X**L
