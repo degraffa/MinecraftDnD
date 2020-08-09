@@ -182,34 +182,6 @@ public class CommandRoll implements CommandExecutor {
         return splitArgs;
     }
 
-    // returns the first roll condition found in a given string
-    private RollCondition getRollConditionFromString(String arg) {
-        RollCondition noneCondition = new RollCondition(RollConditionType.None, 0);
-
-        for (int i = 0; i < arg.length(); i++) {
-            char c = arg.charAt(i);
-
-            // drop high/low
-            if (c == 'h' || c == 'H' || c == 'l' || c == 'L') {
-                int dropAmount = 1;
-                if (i < arg.length() - 1 && Character.isDigit(arg.charAt(i+1))) {
-                    dropAmount = Integer.parseInt(arg.substring(i+1, i+2));
-                }
-                RollConditionType conditionType = (c == 'h' || c == 'H') ?
-                        RollConditionType.DropHighest : RollConditionType.DropLowest;
-                RollCondition condition = new RollCondition(conditionType, dropAmount);
-
-                return condition;
-            }
-            // we've reached another component, end now
-            if (c == '+' || c == '-') {
-                return noneCondition;
-            }
-        }
-
-        return noneCondition;
-    }
-
     private ArrayList<String> splitDropHighLow(String arg) {
         int dropCharIdx = -1;
 
@@ -326,8 +298,6 @@ public class CommandRoll implements CommandExecutor {
                     rollComponents.add(rollComponentConstant);
                     break;
                 case Condition:
-                    RollCondition rollCondition = rollConditionFromString(arg);
-
                     // do nothing if there aren't any components before this
                     if (rollComponents.size() == 0) break;
 
@@ -335,6 +305,7 @@ public class CommandRoll implements CommandExecutor {
                     RollComponent lastComponent = rollComponents.get(rollComponents.size()-1);
                     if (!(lastComponent instanceof RollComponentDice)) break;
 
+                    RollCondition rollCondition = rollConditionFromString(arg);
                     // cast the component to a dice roll component since we know it has to be one
                     RollComponentDice rollComponentDice = (RollComponentDice)lastComponent;
                     rollComponentDice.addCondition(rollCondition);
@@ -382,7 +353,23 @@ public class CommandRoll implements CommandExecutor {
     
     // Creates a condition from an argument representing one (ex. D3)
     private RollCondition rollConditionFromString(String arg) {
-        // TODO: Complete this
+        char charOne = arg.charAt(0);
+
+        boolean dropHigh = charOne == 'h' || charOne == 'H';
+        boolean dropLow = charOne == 'l' || charOne == 'L';
+
+        if (dropHigh || dropLow) {
+            int dropAmount = 1;
+            if (arg.length() > 1) {
+                char charTwo = arg.charAt(1);
+                dropAmount = Integer.parseInt(String.valueOf(charTwo));
+            }
+
+            RollConditionType conditionType = (dropHigh) ? RollConditionType.DropHighest : RollConditionType.DropLowest;
+
+            return new RollCondition(conditionType, dropAmount);
+        }
+
         return new RollCondition(RollConditionType.DropHighest, 1);
     }
     
@@ -401,6 +388,34 @@ public class CommandRoll implements CommandExecutor {
         }
         
         return op;
+    }
+
+    // returns the first roll condition found in a given string
+    private RollCondition getRollConditionFromString(String arg) {
+        RollCondition noneCondition = new RollCondition(RollConditionType.None, 0);
+
+        for (int i = 0; i < arg.length(); i++) {
+            char c = arg.charAt(i);
+
+            // drop high/low
+            if (c == 'h' || c == 'H' || c == 'l' || c == 'L') {
+                int dropAmount = 1;
+                if (i < arg.length() - 1 && Character.isDigit(arg.charAt(i+1))) {
+                    dropAmount = Integer.parseInt(arg.substring(i+1, i+2));
+                }
+                RollConditionType conditionType = (c == 'h' || c == 'H') ?
+                        RollConditionType.DropHighest : RollConditionType.DropLowest;
+                RollCondition condition = new RollCondition(conditionType, dropAmount);
+
+                return condition;
+            }
+            // we've reached another component, end now
+            if (c == '+' || c == '-') {
+                return noneCondition;
+            }
+        }
+
+        return noneCondition;
     }
 
     private String getRollString(ArrayList<RollSet> rollSets) {
@@ -457,25 +472,23 @@ public class CommandRoll implements CommandExecutor {
     public static void main(String[] args) {
         CommandRoll cr = new CommandRoll();
 
-        String[] testStrings = {"1d20H"};
+        String[] testStrings = {"2d20H"};
 
         // step 1: Separate into distinct chunks
         ArrayList<String> arguments = cr.splitArguments(testStrings);
 
-        System.out.println(arguments);
+        // Step 2: Determine what kind of argument each argument is
+        ArrayList<RollArgumentType> argumentTypes = cr.getArgumentTypes(arguments);
 
-//        // Step 2: Determine what kind of argument each argument is
-//        ArrayList<RollArgumentType> argumentTypes = cr.getArgumentTypes(arguments);
-//
-//        // Step 4: Get the roll command from the arguments
-//        Roll roll = cr.getRollFromArguments(arguments, argumentTypes);
-//
-//        // Step 5: Roll the dice and remember the results
-//        ArrayList<RollSet> rollSets = roll.roll();
-//
-//        // Step 6: Create the string to print to the command sender
-//        String rollString = cr.getRollString(rollSets);
-//
-//        System.out.println(rollString);
+        // Step 4: Get the roll command from the arguments
+        Roll roll = cr.getRollFromArguments(arguments, argumentTypes);
+
+        // Step 5: Roll the dice and remember the results
+        ArrayList<RollSet> rollSets = roll.roll();
+
+        // Step 6: Create the string to print to the command sender
+        String rollString = cr.getRollString(rollSets);
+
+        System.out.println(rollString);
     }
 }

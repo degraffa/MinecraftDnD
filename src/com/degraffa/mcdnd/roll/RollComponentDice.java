@@ -47,13 +47,17 @@ public class RollComponentDice extends RollComponent {
         for (int i = 0; i < numDice; i++) {
             int rollValue = rollDie();
 
-            rollTotal += rollValue;
             rolls.add(rollValue);
         }
 
         // for each condition, apply it to the rolls
         for (RollCondition condition : conditions) {
             applyConditions(condition, rolls);
+        }
+
+        // Calculate roll total after conditions are applied
+        for (int rollValue : rolls) {
+            rollTotal += rollValue;
         }
 
         // if we're subtracting this, negate the roll total
