@@ -1,5 +1,6 @@
 package com.degraffa.mcdnd.roll;
 
+import com.degraffa.mcdnd.util.StringUtil;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -16,6 +17,9 @@ public class CommandRoll implements CommandExecutor {
     // maximum amount of arguments until the command is rejected
     public final int MAX_ARGUMENT_LENGTH = 20;
 
+    // how many times should this command be executed?
+    private int commandMultiplier;
+
     @Override
     public boolean onCommand(CommandSender commandSender, Command command, String s, String[] strings) {
         // first, try to discern what kind of command this is based on the parameters
@@ -29,6 +33,8 @@ public class CommandRoll implements CommandExecutor {
         if (strings.length > MAX_ARGUMENT_LENGTH) {
             commandSender.sendMessage("Too many arguments, you may use up to a maximum of " + MAX_ARGUMENT_LENGTH + " arguments");
         }
+
+        this.commandMultiplier = 1;
 
         // step 1: Separate into distinct chunks
         ArrayList<String> arguments = splitArguments(strings);
@@ -45,16 +51,18 @@ public class CommandRoll implements CommandExecutor {
         }
 
         // Step 4: Get the roll command from the arguments
-        Roll roll = getRollFromArguments(arguments, argumentTypes);
+        for (int i = 0; i < this.commandMultiplier; i++) {
+            Roll roll = getRollFromArguments(arguments, argumentTypes);
 
-        // Step 5: Roll the dice and remember the results
-        ArrayList<RollSet> rollSets = roll.roll();
+            // Step 5: Roll the dice and remember the results
+            ArrayList<RollSet> rollSets = roll.roll();
 
-        // Step 6: Create the string to print to the command sender
-        String rollString = getRollString(rollSets);
+            // Step 6: Create the string to print to the command sender
+            String rollString = getRollString(rollSets);
 
-        // Step 7: Send the roll string to the command sender
-        commandSender.sendMessage(rollString);
+            // Step 7: Send the roll string to the command sender
+            commandSender.sendMessage(rollString);
+        }
 
         return true;
     }
@@ -63,8 +71,7 @@ public class CommandRoll implements CommandExecutor {
     private ArrayList<String> splitArguments(String[] strings) {
         ArrayList<String> args = new ArrayList<>();
 
-        for (int i = 0; i < strings.length; i++) {
-            String arg = strings[i];
+        for (String arg : strings) {
             ArrayList<String> splitArgs = splitArgument(arg);
             args.addAll(splitArgs);
         }
@@ -99,9 +106,7 @@ public class CommandRoll implements CommandExecutor {
 
         // Now that we have split on +/-, split on condition (in splitArgs)
         ArrayList<String> splitCondArgs = new ArrayList<>();
-        for (int i = 0; i < splitOpArgs.size(); i++) {
-            String s = splitOpArgs.get(i);
-
+        for (String s : splitOpArgs) {
             // don't worry about it if its just a +/-
             if (s.length() == 1) continue;
 
@@ -233,16 +238,17 @@ public class CommandRoll implements CommandExecutor {
 //        ArrayList<RollComponent> rollComponents = new ArrayList<>();
         ArrayList<RollArgumentType> argumentTypes = new ArrayList<>();
 
-        for (int i = 0; i < args.size(); i++) {
-            String arg = args.get(i);
-            RollArgumentType argType = getRollArgType(arg);
+        boolean isFirst = true;
+        for (String arg : args) {
+            RollArgumentType argType = getArgType(arg, isFirst);
             argumentTypes.add(argType);
+            isFirst = false;
         }
 
         return argumentTypes;
     }
 
-    private RollArgumentType getRollArgType(String arg) {
+    private RollArgumentType getArgType(String arg, boolean isFirst) {
         char charOne = arg.charAt(0);
 
         // 4 Cases for each string:
@@ -251,18 +257,22 @@ public class CommandRoll implements CommandExecutor {
             if (c == 'd') return RollArgumentType.DiceComponent;
         }
 
-        // 2: A new constant roll component
-        boolean isConstant = true;
-        for (char c : arg.toCharArray()) {
-            if (!Character.isDigit(c)) isConstant = false;
+        // 2: A new constant roll component (or a multiplier)
+        if (StringUtil.isNumeric(arg)) {
+            // if this is the first one, then this is a multiplier
+            if (isFirst) {
+                this.commandMultiplier = Integer.parseInt(arg);
+                return RollArgumentType.Multiplier;
+            } else {
+                return RollArgumentType.ConstantComponent;
+            }
         }
-        if (isConstant) return RollArgumentType.ConstantComponent;
 
         // 3: A roll operation
         if (charOne == '+' || charOne == '-') return RollArgumentType.Operation;
 
         // 4: A condition on the previous dice roll component
-        // If nothing else returned, assume it is a condition
+        // If nothing else returned, assume it's a condition!
         return RollArgumentType.Condition;
     }
 
@@ -319,6 +329,9 @@ public class CommandRoll implements CommandExecutor {
                     if (rollOp != nextRollOp) nextRollOp = RollOperation.Subtract;
                     else nextRollOp = RollOperation.Add;
 
+                    break;
+                case Multiplier:
+                    // no need to do anything
                     break;
             }
         }
@@ -405,9 +418,8 @@ public class CommandRoll implements CommandExecutor {
                 }
                 RollConditionType conditionType = (c == 'h' || c == 'H') ?
                         RollConditionType.DropHighest : RollConditionType.DropLowest;
-                RollCondition condition = new RollCondition(conditionType, dropAmount);
 
-                return condition;
+                return new RollCondition(conditionType, dropAmount);
             }
             // we've reached another component, end now
             if (c == '+' || c == '-') {
@@ -421,8 +433,8 @@ public class CommandRoll implements CommandExecutor {
     private String getRollString(ArrayList<RollSet> rollSets) {
         int rollTotal = 0;
 
-        for (int i = 0; i < rollSets.size(); i++) {
-            rollTotal += rollSets.get(i).getRollValue();
+        for (RollSet rs : rollSets) {
+            rollTotal += rs.getRollValue();
         }
 
         String rollString = "Roll: ";
@@ -464,7 +476,7 @@ public class CommandRoll implements CommandExecutor {
             sb.append(constantSum);
         }
 
-        sb.append("\nResult: ").append(rollTotal);
+        sb.append(" Result: ").append(rollTotal);
 
         return sb.toString();
     }
@@ -472,7 +484,9 @@ public class CommandRoll implements CommandExecutor {
     public static void main(String[] args) {
         CommandRoll cr = new CommandRoll();
 
-        String[] testStrings = {"2d20l"};
+        String[] testStrings = {"6", "4d6l"};
+
+        cr.commandMultiplier = 1;
 
         // step 1: Separate into distinct chunks
         ArrayList<String> arguments = cr.splitArguments(testStrings);
@@ -481,14 +495,18 @@ public class CommandRoll implements CommandExecutor {
         ArrayList<RollArgumentType> argumentTypes = cr.getArgumentTypes(arguments);
 
         // Step 4: Get the roll command from the arguments
-        Roll roll = cr.getRollFromArguments(arguments, argumentTypes);
+        for (int i = 0; i < cr.commandMultiplier; i++) {
+            Roll roll = cr.getRollFromArguments(arguments, argumentTypes);
 
-        // Step 5: Roll the dice and remember the results
-        ArrayList<RollSet> rollSets = roll.roll();
+            // Step 5: Roll the dice and remember the results
+            ArrayList<RollSet> rollSets = roll.roll();
 
-        // Step 6: Create the string to print to the command sender
-        String rollString = cr.getRollString(rollSets);
+            // Step 6: Create the string to print to the command sender
+            String rollString = cr.getRollString(rollSets);
 
-        System.out.println(rollString);
+            // Step 7: Send the roll string to the command sender
+            System.out.println(rollString);
+        }
+
     }
 }

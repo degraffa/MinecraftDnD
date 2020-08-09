@@ -5,4 +5,5 @@ public enum RollArgumentType {
     ConstantComponent,
     Condition,
     Operation,
+    Multiplier,
 }
