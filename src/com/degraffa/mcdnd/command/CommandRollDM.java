@@ -21,7 +21,10 @@ public class CommandRollDM implements CommandExecutor {
 
         boolean foundDM = false;
         for(Player player : Bukkit.getOnlinePlayers()) {
-            if (player.hasPermission("DM")) {
+            boolean isCommandSender = player.getName().equals(commandSender.getName());
+            if (isCommandSender) foundDM = true;
+
+            if (player.hasPermission("DM") && !isCommandSender) {
                 foundDM = true;
                 player.sendMessage(rollString);
             }

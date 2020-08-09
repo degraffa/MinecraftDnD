@@ -28,14 +28,22 @@ public class CommandRollTo implements CommandExecutor {
 
         commandSender.sendMessage(rollString);
 
+        // only send this message if it's to another player
+        boolean isCommandSender = commandSender.getName().equals(playerName);
+        if (isCommandSender) return true;
+
         boolean foundPlayer = false;
         for (Player player : Bukkit.getOnlinePlayers()) {
+
             if (player.getName() == playerName) {
                 player.sendMessage(rollString);
+
                 foundPlayer = true;
+
                 break;
             }
         }
+
         if (!foundPlayer) {
             commandSender.sendMessage("Error: Could not find player with name " + playerName);
         }
