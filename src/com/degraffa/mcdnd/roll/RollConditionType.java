@@ -8,5 +8,6 @@ package com.degraffa.mcdnd.roll;
      DropGreaterThan,
      ClampHigh,
      ClampLow,
-     Reroll
+     Reroll,
+     None
 }

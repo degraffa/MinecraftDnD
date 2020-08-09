@@ -30,48 +30,8 @@ public class CommandRoll implements CommandExecutor {
             commandSender.sendMessage("Too many arguments, you may use up to a maximum of " + MAX_ARGUMENT_LENGTH + " arguments");
         }
 
-        // acceptable patterns for the first argument
-        // 1 - dX where X is an integer between 1 and [MAX_DIE_SIDES]
-        //  - Rolls a single dice with X sides
-        // 2 - AdX - where A is an integer between 1 and [MAX_DICE] and X is an integer between 1 nad [MAX_DIE_SIDES]
-        //  - rolls A dice with X sides each
-        //  - Additions:
-        //      ADDING ROLLS:
-        //      - +/- AdX: You can add/subtract another roll to this one
-        //          - This can have its own additions
-        //      - +/- X: You can add an integer to this
-        //
-        //      DROPPING ROLLS: Drops can be chained together
-        //      - h: Drops the highest roll
-        //          - hX: Drops the highest X rolls, where X is an integer between 1 and Integer.MAX_VALUE
-        //      - l: Drops the lowest roll
-        //          - lX: Drops the lowest X rolls, where X is an integer between 1 and Integer.MAX_VALUE
-        //
-        //      CONDITIONS:
-        //      - D<X: drop any roll less than X, where X is an integer
-        //      - D>X: drop any roll that is greater than X, where X is an integer
-        //      - D<X>Y: drop any roll that is less than X or greater than Y, where X and Y are integers
-        //      - D=X: drop any roll that is equal to X
-        //      - Example: 4d20D<5=9=11>15: Roll 4d20, drop dice below 5, dice above15, and dice that roll 9 or 11
-        //
-        //      CLAMPING ROLLS:
-        //      - C<X: Treat any roll less than X as X, where X is a positive integer
-        //      - C>X: Treat any roll greater than X as X, where X is a positive integer
-        //      - C<X>Y: Treat any roll less than X as X, and any value greater than Y as Y, where X and Y are positive integers]
-        //
-        //      REROLL:
-        //      - R{X, ...., Y}A: Rerolls any rolls equal the result in the list, up to A times. List has max size MAX_REROLL_VALUES
-        //
-        //      COUNT:
-        //      - #: Count how many dice roll the maximum value
-        //      - #[CONDITION]: Count how many die roll that meet the condition
-        //
-        //      SPECIAL:
-        //      - u: All rolls will be unique. If more die are rolled than there are faces, this command will fail.
-        //          - Cannot have any other conditions
-
         // step 1: Separate into distinct chunks
-        ArrayList<String> arguments = processArguments(strings);
+        ArrayList<String> arguments = splitArguments(strings);
 
         // Step 2: Determine what kind of argument each argument is
         ArrayList<RollArgumentType> argumentTypes = getArgumentTypes(arguments);
@@ -99,10 +59,10 @@ public class CommandRoll implements CommandExecutor {
         return true;
     }
 
-    private ArrayList<String> processArguments(String[] strings) {
+    // Split each argument into its distinct parts
+    private ArrayList<String> splitArguments(String[] strings) {
         ArrayList<String> args = new ArrayList<>();
 
-        // for each argument, split it up into its distinct parts to simplify later processing
         for (int i = 0; i < strings.length; i++) {
             String arg = strings[i];
             ArrayList<String> splitArgs = splitArgument(arg);
@@ -114,22 +74,41 @@ public class CommandRoll implements CommandExecutor {
 
     // Splits a single argument into its individual pieces
     private ArrayList<String> splitArgument(String arg) {
-        ArrayList<String> splitArgs = new ArrayList<>();
+        ArrayList<String> splitOpArgs = new ArrayList<>();
 
+        // just add it immediately if there's nothing to split
+        if (arg.length() == 1) {
+            splitOpArgs.add(arg);
+            return splitOpArgs;
+        }
+
+        // start by splitting on +/-
         for (int i = 0; i < arg.length(); i++) {
             char c = arg.charAt(i);
 
             if (c == '+' || c == '-') {
-                splitArgs.addAll(splitPlusMinus(arg, i));
+                splitOpArgs.addAll(splitPlusMinus(arg, i));
                 break;
             }
         }
+
         // if there was nothing to split, just add the whole string
-        if (splitArgs.size() == 0) {
-            splitArgs.add(arg);
+        if (splitOpArgs.size() == 0) {
+            splitOpArgs.add(arg);
         }
 
-        return splitArgs;
+        // Now that we have split on +/-, split on condition (in splitArgs)
+        ArrayList<String> splitCondArgs = new ArrayList<>();
+        for (int i = 0; i < splitOpArgs.size(); i++) {
+            String s = splitOpArgs.get(i);
+
+            // don't worry about it if its just a +/-
+            if (s.length() == 1) continue;
+
+            splitCondArgs.addAll(splitConditions(s));
+        }
+
+        return splitCondArgs;
     }
 
     // assumes '+' or '-' will be in the string at index [opIdx] in [arg]
@@ -144,7 +123,6 @@ public class CommandRoll implements CommandExecutor {
         // 3: AdX+ B
         boolean caseThree = arg.length() > 1 && opIdx == arg.length() - 1;
         // 4: AdX + B
-        boolean caseFour = arg.length() == 1;
 
         // add left half of equation
         if (caseOne || caseThree) {
@@ -176,9 +154,103 @@ public class CommandRoll implements CommandExecutor {
         if (moreComponents) {
             splitArgs.addAll(splitPlusMinus(right, nextOpIdx));
         }
-        // otherwise you can add the whole thing
+        // otherwise we can just add the right side since its the last one
         else {
             splitArgs.add(right);
+        }
+
+        return splitArgs;
+    }
+
+    private ArrayList<String> splitConditions(String arg) {
+        ArrayList<String> splitArgs = new ArrayList<>();
+
+        RollCondition condition = getRollConditionFromString(arg);
+
+        switch(condition.type) {
+            case DropHighest:
+            case DropLowest:
+                splitArgs.addAll(splitDropHighLow(arg));
+                break;
+            // if no conditions, don't split anything
+            case None:
+            default:
+                splitArgs.add(arg);
+                break;
+        }
+
+        return splitArgs;
+    }
+
+    // returns the first roll condition found in a given string
+    private RollCondition getRollConditionFromString(String arg) {
+        RollCondition noneCondition = new RollCondition(RollConditionType.None, 0);
+
+        for (int i = 0; i < arg.length(); i++) {
+            char c = arg.charAt(i);
+
+            // drop high/low
+            if (c == 'h' || c == 'H' || c == 'l' || c == 'L') {
+                int dropAmount = 1;
+                if (i < arg.length() - 1 && Character.isDigit(arg.charAt(i+1))) {
+                    dropAmount = Integer.parseInt(arg.substring(i+1, i+2));
+                }
+                RollConditionType conditionType = (c == 'h' || c == 'H') ?
+                        RollConditionType.DropHighest : RollConditionType.DropLowest;
+                RollCondition condition = new RollCondition(conditionType, dropAmount);
+
+                return condition;
+            }
+            // we've reached another component, end now
+            if (c == '+' || c == '-') {
+                return noneCondition;
+            }
+        }
+
+        return noneCondition;
+    }
+
+    private ArrayList<String> splitDropHighLow(String arg) {
+        int dropCharIdx = -1;
+
+        // Whether the amount to drop is given or not
+        boolean dropAmountGiven = false;
+
+        // determine where to split
+        for (int i = 0; i < arg.length(); i++) {
+            char c = arg.charAt(i);
+
+            if (c == 'h' || c == 'l' || c == 'H' || c == 'L') {
+                dropCharIdx = i;
+
+                // if this is the last character, break early
+                if (i == arg.length() -1) break;
+
+                char c2 = arg.charAt(i+1);
+                if (Character.isDigit(c2)) {
+                    dropAmountGiven = true;
+                }
+                break;
+            }
+        }
+
+        ArrayList<String> splitArgs = new ArrayList<>();
+
+        if (dropCharIdx != 0) {
+            String left = arg.substring(0, dropCharIdx);
+            splitArgs.add(left);
+        }
+
+        int endPoint = (dropAmountGiven) ? dropCharIdx+2 : dropCharIdx+1;
+        String dropChar = arg.substring(dropCharIdx, endPoint);
+        splitArgs.add(dropChar);
+
+        if (dropCharIdx != arg.length() -1) {
+            String right = arg.substring(dropCharIdx+1);
+
+            // recurse down for more conditions
+            ArrayList<String> rightSplit = splitConditions(right);
+            splitArgs.addAll(rightSplit);
         }
 
         return splitArgs;
@@ -228,13 +300,13 @@ public class CommandRoll implements CommandExecutor {
     }
 
     // Creates a Roll object from given arguments
-    private Roll getRollFromArguments(ArrayList<String> args, ArrayList<RollArgumentType> argumentTypes) {
+    private Roll getRollFromArguments(ArrayList<String> args, ArrayList<RollArgumentType> argTypes) {
         ArrayList<RollComponent> rollComponents = new ArrayList<>();
 
         RollOperation nextRollOp = RollOperation.Add;
         for (int i = 0; i < args.size(); i++) {
             String arg = args.get(i);
-            RollArgumentType argType = getRollArgType(arg);
+            RollArgumentType argType = argTypes.get(i);
 
             switch (argType) {
                 case DiceComponent:
@@ -285,7 +357,6 @@ public class CommandRoll implements CommandExecutor {
     
     // Creates a dice roll component from an argument representing one (ex. 1d20)
     private RollComponentDice rollComponentDiceFromString(String arg) {
-
         int dCharIdx = arg.indexOf('d');
         int numDice;
         if (dCharIdx == 0) {
@@ -386,23 +457,25 @@ public class CommandRoll implements CommandExecutor {
     public static void main(String[] args) {
         CommandRoll cr = new CommandRoll();
 
-        String[] testStrings = {"1d100-1d20+2d5"};
+        String[] testStrings = {"1d20H"};
 
         // step 1: Separate into distinct chunks
-        ArrayList<String> arguments = cr.processArguments(testStrings);
+        ArrayList<String> arguments = cr.splitArguments(testStrings);
 
-        // Step 2: Determine what kind of argument each argument is
-        ArrayList<RollArgumentType> argumentTypes = cr.getArgumentTypes(arguments);
+        System.out.println(arguments);
 
-        // Step 4: Get the roll command from the arguments
-        Roll roll = cr.getRollFromArguments(arguments, argumentTypes);
-
-        // Step 5: Roll the dice and remember the results
-        ArrayList<RollSet> rollSets = roll.roll();
-
-        // Step 6: Create the string to print to the command sender
-        String rollString = cr.getRollString(rollSets);
-
-        System.out.println(rollString);
+//        // Step 2: Determine what kind of argument each argument is
+//        ArrayList<RollArgumentType> argumentTypes = cr.getArgumentTypes(arguments);
+//
+//        // Step 4: Get the roll command from the arguments
+//        Roll roll = cr.getRollFromArguments(arguments, argumentTypes);
+//
+//        // Step 5: Roll the dice and remember the results
+//        ArrayList<RollSet> rollSets = roll.roll();
+//
+//        // Step 6: Create the string to print to the command sender
+//        String rollString = cr.getRollString(rollSets);
+//
+//        System.out.println(rollString);
     }
 }
