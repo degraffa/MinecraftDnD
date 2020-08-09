@@ -15,7 +15,7 @@ commands:
     permission-message: You do not have permission to roll!
   rollto:
     description: Like roll, but the results are only sent to you and to another user
-    usage: "Usage: /rollme <username> <dice notation>"
+    usage: "Usage: /rollto <username> <dice notation>"
     permission: mcdnd.roll
     permission-message: You do not have permission to roll!
   rolldm:
