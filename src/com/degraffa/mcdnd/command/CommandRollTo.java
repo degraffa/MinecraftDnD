@@ -21,7 +21,7 @@ public class CommandRollTo implements CommandExecutor {
         for (int i = 1; i < strings.length; i++) {
             args.add(strings[i]);
         }
-        String[] commandStrings = (String[])args.toArray();
+        String[] commandStrings = StringUtil.objectArrayToStringArray(args.toArray());
 
         RollArgumentParser argumentParser = new RollArgumentParser();
         String rollString = argumentParser.parseRollArguments(commandSender.getName(), commandStrings);
