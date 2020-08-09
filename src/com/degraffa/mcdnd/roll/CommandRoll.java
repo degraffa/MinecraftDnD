@@ -154,9 +154,31 @@ public class CommandRoll implements CommandExecutor {
         // add operator
         String op = arg.substring(opIdx, opIdx+1);
         splitArgs.add(op);
-        // add right half of the equation
+
+        // get the right half of the equation
+        String right = "";
         if (caseOne || caseTwo) {
-            String right = arg.substring(opIdx+1);
+            right = arg.substring(opIdx+1);
+        }
+
+        // check to see if the right side has any + or -, if so, recurse down the string until there are none left
+        boolean moreComponents = false;
+        int nextOpIdx = -1;
+        for (int i = 0; i < right.length(); i++) {
+            char c = right.charAt(i);
+            if (c == '+' || c == '-') {
+                moreComponents = true;
+                nextOpIdx = i;
+                break;
+            }
+        }
+        // if there are more components, recurse and only add the part before the next '+' or '-'
+        if (moreComponents) {
+            splitArgs.add(right.substring(0, nextOpIdx));
+            splitArgs.addAll(splitPlusMinus(right, nextOpIdx));
+        }
+        // otherwise you can add the whole thing
+        else {
             splitArgs.add(right);
         }
 
@@ -365,7 +387,7 @@ public class CommandRoll implements CommandExecutor {
     public static void main(String[] args) {
         CommandRoll cr = new CommandRoll();
 
-        String[] testStrings = {"1d100-1d20"};
+        String[] testStrings = {"1d100-1d20+2"};
 
         // step 1: Separate into distinct chunks
         ArrayList<String> arguments = cr.processArguments(testStrings);
