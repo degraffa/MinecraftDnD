@@ -94,7 +94,15 @@ public class CommandRoll implements CommandExecutor {
             char c = arg.charAt(i);
 
             if (c == '+' || c == '-') {
-                splitOpArgs.addAll(splitPlusMinus(arg, i));
+                // if this isn't the last character, only split if the next character isn't 'd'
+                if (i != arg.length() - 1) {
+                    char c2 = arg.charAt(i + 1);
+                    if (c2 != 'd') {
+                        splitOpArgs.addAll(splitPlusMinus(arg, i));
+                    }
+                } else {
+                    splitOpArgs.addAll(splitPlusMinus(arg, i));
+                }
                 break;
             }
         }
@@ -330,7 +338,7 @@ public class CommandRoll implements CommandExecutor {
                     else nextRollOp = RollOperation.Add;
 
                     break;
-                case Multiplier:
+                default:
                     // no need to do anything
                     break;
             }
@@ -341,11 +349,24 @@ public class CommandRoll implements CommandExecutor {
     
     // Creates a dice roll component from an argument representing one (ex. 1d20)
     private RollComponentDice rollComponentDiceFromString(String arg) {
+        ArrayList<RollCondition> rollConditions = new ArrayList<>();
+
         int dCharIdx = arg.indexOf('d');
+
         int numDice;
-        if (dCharIdx == 0) {
+
+        if (dCharIdx == 1 && arg.charAt(0) == '+') {
+            numDice = 2;
+            rollConditions.add(new RollCondition(RollConditionType.DropLowest, 1));
+        }
+        else if (dCharIdx == 1 && arg.charAt(0) == '-') {
+            numDice = 2;
+            rollConditions.add(new RollCondition(RollConditionType.DropHighest, 1));
+        }
+        else if (dCharIdx == 0) {
             numDice = 1;
-        } else {
+        }
+        else {
             String numDiceString = arg.substring(0, dCharIdx);
             numDice = Integer.parseInt(numDiceString);
         }
@@ -353,8 +374,13 @@ public class CommandRoll implements CommandExecutor {
         String numSidesString = arg.substring(dCharIdx+1);
 
         int numSides = Integer.parseInt(numSidesString);
-        
-        return new RollComponentDice(numDice, numSides);
+
+        RollComponentDice rollComponentDice = new RollComponentDice(numDice, numSides);
+        // apply any macro conditions to the component dice
+        for (RollCondition condition : rollConditions) {
+            rollComponentDice.addCondition(condition);
+        }
+        return rollComponentDice;
     }
 
     // Creates a constant roll component from string representing one (ex. 50)
@@ -484,7 +510,7 @@ public class CommandRoll implements CommandExecutor {
     public static void main(String[] args) {
         CommandRoll cr = new CommandRoll();
 
-        String[] testStrings = {"6", "4d6l"};
+        String[] testStrings = {"6", "-d20"};
 
         cr.commandMultiplier = 1;
 
