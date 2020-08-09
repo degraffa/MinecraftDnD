@@ -172,9 +172,8 @@ public class CommandRoll implements CommandExecutor {
                 break;
             }
         }
-        // if there are more components, recurse and only add the part before the next '+' or '-'
+        // if there are more components, recurse
         if (moreComponents) {
-            splitArgs.add(right.substring(0, nextOpIdx));
             splitArgs.addAll(splitPlusMinus(right, nextOpIdx));
         }
         // otherwise you can add the whole thing
@@ -387,7 +386,7 @@ public class CommandRoll implements CommandExecutor {
     public static void main(String[] args) {
         CommandRoll cr = new CommandRoll();
 
-        String[] testStrings = {"1d100-1d20+2"};
+        String[] testStrings = {"1d100-1d20+2d5"};
 
         // step 1: Separate into distinct chunks
         ArrayList<String> arguments = cr.processArguments(testStrings);
