@@ -101,6 +101,7 @@ public class CommandRoll implements CommandExecutor {
 
     private ArrayList<String> processArguments(String[] strings) {
         ArrayList<String> args = new ArrayList<>();
+
         // for each argument, split it up into its distinct parts to simplify later processing
         for (int i = 0; i < strings.length; i++) {
             String arg = strings[i];
@@ -131,6 +132,38 @@ public class CommandRoll implements CommandExecutor {
         return splitArgs;
     }
 
+    // assumes '+' or '-' will be in the string at index [opIdx] in [arg]
+    private ArrayList<String> splitPlusMinus(String arg, int opIdx) {
+        ArrayList<String> splitArgs = new ArrayList<>();
+
+        // 4 cases:
+        // 1: AdX+B
+        boolean caseOne = opIdx < arg.length() && opIdx > 0;
+        // 2: AdX +B
+        boolean caseTwo = arg.length() > 1 && opIdx == 0;
+        // 3: AdX+ B
+        boolean caseThree = arg.length() > 1 && opIdx == arg.length() - 1;
+        // 4: AdX + B
+        boolean caseFour = arg.length() == 1;
+
+        // add left half of equation
+        if (caseOne || caseThree) {
+            String left = arg.substring(0, opIdx);
+            splitArgs.add(left);
+        }
+        // add operator
+        String op = arg.substring(opIdx, opIdx+1);
+        splitArgs.add(op);
+        // add right half of the equation
+        if (caseOne || caseTwo) {
+            String right = arg.substring(opIdx+1);
+            splitArgs.add(right);
+        }
+
+        return splitArgs;
+    }
+
+    // Returns the type of each of the arguments
     private ArrayList<RollArgumentType> getArgumentTypes(ArrayList<String> args) {
 //        ArrayList<RollComponent> rollComponents = new ArrayList<>();
         ArrayList<RollArgumentType> argumentTypes = new ArrayList<>();
@@ -177,6 +210,7 @@ public class CommandRoll implements CommandExecutor {
     private Roll getRollFromArguments(ArrayList<String> args, ArrayList<RollArgumentType> argumentTypes) {
         ArrayList<RollComponent> rollComponents = new ArrayList<>();
 
+        RollOperation nextRollOp = RollOperation.Add;
         for (int i = 0; i < args.size(); i++) {
             String arg = args.get(i);
             RollArgumentType argType = getRollArgType(arg);
@@ -184,10 +218,18 @@ public class CommandRoll implements CommandExecutor {
             switch (argType) {
                 case DiceComponent:
                     RollComponentDice rollComponent = rollComponentDiceFromString(arg);
+
+                    rollComponent.setRollOperation(nextRollOp);
+                    nextRollOp = RollOperation.Add;
+
                     rollComponents.add(rollComponent);
                     break;
                 case ConstantComponent:
                     RollComponentConstant rollComponentConstant = rollComponentConstantFromString(arg);
+
+                    rollComponentConstant.setRollOperation(nextRollOp);
+                    nextRollOp = RollOperation.Add;
+
                     rollComponents.add(rollComponentConstant);
                     break;
                 case Condition:
@@ -210,49 +252,14 @@ public class CommandRoll implements CommandExecutor {
                 case Operation:
                     RollOperation rollOp = rollOperationFromString(arg);
 
-                    // only need to change the operation if this is subtract
-                    if (rollOp == RollOperation.Subtract) {
-                        RollComponent lastRollComponent = rollComponents.get(rollComponents.size()-1);
-                        lastRollComponent.setRollOperation(rollOp);
-                        rollComponents.set(rollComponents.size()-1, lastRollComponent);
-                    }
+                    if (rollOp != nextRollOp) nextRollOp = RollOperation.Subtract;
+                    else nextRollOp = RollOperation.Add;
 
                     break;
             }
         }
 
         return new Roll(rollComponents);
-    }
-
-    // assumes '+' or '-' will be in the string at index [opIdx] in [arg]
-    private ArrayList<String> splitPlusMinus(String arg, int opIdx) {
-        ArrayList<String> splitArgs = new ArrayList<>();
-
-        // 4 cases:
-        // 1: AdX+B
-        boolean caseOne = opIdx < arg.length() && opIdx > 0;
-        // 2: AdX +B
-        boolean caseTwo = arg.length() > 1 && opIdx == 0;
-        // 3: AdX+ B
-        boolean caseThree = arg.length() > 1 && opIdx == arg.length() - 1;
-        // 4: AdX + B
-        boolean caseFour = arg.length() == 1;
-
-        // add left half of equation
-        if (caseOne || caseThree) {
-            String left = arg.substring(0, opIdx);
-            splitArgs.add(left);
-        }
-        // add operator
-        String op = arg.substring(opIdx, opIdx+1);
-        splitArgs.add(op);
-        // add right half of the equation
-        if (caseOne || caseTwo) {
-            String right = arg.substring(opIdx+1);
-            splitArgs.add(right);
-        }
-
-        return splitArgs;
     }
     
     // Creates a dice roll component from an argument representing one (ex. 1d20)
@@ -358,7 +365,7 @@ public class CommandRoll implements CommandExecutor {
     public static void main(String[] args) {
         CommandRoll cr = new CommandRoll();
 
-        String[] testStrings = {"1d100+1d2"};
+        String[] testStrings = {"1d100-1d20"};
 
         // step 1: Separate into distinct chunks
         ArrayList<String> arguments = cr.processArguments(testStrings);
