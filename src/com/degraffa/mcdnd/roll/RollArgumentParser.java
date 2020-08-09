@@ -2,36 +2,25 @@ package com.degraffa.mcdnd.roll;
 
 import com.degraffa.mcdnd.util.StringUtil;
 import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 
 import java.util.ArrayList;
 
-public class CommandRoll implements CommandExecutor {
+public class RollArgumentParser {
     // maximum amount of dice that can be rolled in a single command
     public final int MAX_DICE = 1000;
     // maximum sided die that can be rolled
     public final int MAX_DIE_SIDES = 10000;
     // max size of a list in a dice roll
     public final int MAX_REROLL_VALUES = 4;
-    // maximum amount of arguments until the command is rejected
-    public final int MAX_ARGUMENT_LENGTH = 20;
 
     // how many times should this command be executed?
     private int commandMultiplier;
 
-    @Override
-    public boolean onCommand(CommandSender commandSender, Command command, String s, String[] strings) {
-        // first, try to discern what kind of command this is based on the parameters
-        // if no additional arguments, then there's nothing to roll
-        if (strings.length == 0) {
-            commandSender.sendMessage("Must specify dice notation after roll. For example, /roll 1d6");
-            return false;
-        }
-
+    public String parseRollArguments(String name, String[] strings) {
         // if too many arguments, make the user be more concise
-        if (strings.length > MAX_ARGUMENT_LENGTH) {
-            commandSender.sendMessage("Too many arguments, you may use up to a maximum of " + MAX_ARGUMENT_LENGTH + " arguments");
+        if (strings.length == 0) {
+            return "Syntax Error: No arguments after command";
         }
 
         this.commandMultiplier = 1;
@@ -46,10 +35,10 @@ public class CommandRoll implements CommandExecutor {
         boolean goodSyntax = verifyArgumentSyntax(arguments, argumentTypes);
         // end early if the syntax is bad
         if (!goodSyntax) {
-            commandSender.sendMessage("Incorrect roll syntax");
-            return false;
+            return "Incorrect roll syntax";
         }
 
+        StringBuilder sb = new StringBuilder();
         // Step 4: Get the roll command from the arguments
         for (int i = 0; i < this.commandMultiplier; i++) {
             Roll roll = getRollFromArguments(arguments, argumentTypes);
@@ -58,13 +47,14 @@ public class CommandRoll implements CommandExecutor {
             ArrayList<RollSet> rollSets = roll.roll();
 
             // Step 6: Create the string to print to the command sender
-            String rollString = getRollString(rollSets);
+            boolean isFirst = i == 0;
+            String rollString = getRollString(name, arguments, rollSets, isFirst);
 
             // Step 7: Send the roll string to the command sender
-            commandSender.sendMessage(rollString);
+            sb.append(rollString);
         }
 
-        return true;
+        return sb.toString();
     }
 
     // Split each argument into its distinct parts
@@ -346,7 +336,7 @@ public class CommandRoll implements CommandExecutor {
 
         return new Roll(rollComponents);
     }
-    
+
     // Creates a dice roll component from an argument representing one (ex. 1d20)
     private RollComponentDice rollComponentDiceFromString(String arg) {
         ArrayList<RollCondition> rollConditions = new ArrayList<>();
@@ -389,7 +379,7 @@ public class CommandRoll implements CommandExecutor {
 
         return new RollComponentConstant(constant);
     }
-    
+
     // Creates a condition from an argument representing one (ex. D3)
     private RollCondition rollConditionFromString(String arg) {
         char charOne = arg.charAt(0);
@@ -411,11 +401,11 @@ public class CommandRoll implements CommandExecutor {
 
         return new RollCondition(RollConditionType.DropHighest, 1);
     }
-    
+
     // Creates a roll operation from an argument representing one
     private RollOperation rollOperationFromString(String arg) {
         RollOperation op;
-        
+
         switch(arg.charAt(0)) {
             case '-':
                 op = RollOperation.Subtract;
@@ -425,7 +415,7 @@ public class CommandRoll implements CommandExecutor {
                 op = RollOperation.Add;
                 break;
         }
-        
+
         return op;
     }
 
@@ -456,17 +446,30 @@ public class CommandRoll implements CommandExecutor {
         return noneCondition;
     }
 
-    private String getRollString(ArrayList<RollSet> rollSets) {
+    private String getRollString(String name, ArrayList<String> args, ArrayList<RollSet> rollSets, boolean isFirst) {
+        StringBuilder sb = new StringBuilder();
+
+        // Step 1: Print Command if this is the first one
+        if (isFirst) {
+            sb.append(name);
+            sb.append(" rolled ");
+
+            for (String arg : args) {
+                sb.append(arg);
+                sb.append(" ");
+            }
+
+            sb.append("\n");
+        }
+
+        // Step 2: Print results
+        sb.append("Result: ");
         int rollTotal = 0;
+        int constantSum = 0;
 
         for (RollSet rs : rollSets) {
             rollTotal += rs.getRollValue();
         }
-
-        String rollString = "Roll: ";
-        StringBuilder sb = new StringBuilder(rollString);
-
-        int constantSum = 0;
 
         for (int i = 0; i < rollSets.size(); i++) {
             RollSet rollSet = rollSets.get(i);
@@ -502,33 +505,34 @@ public class CommandRoll implements CommandExecutor {
             sb.append(constantSum);
         }
 
-        sb.append(" Result: ").append(rollTotal);
+        sb.append(" Total: ").append(rollTotal);
 
         return sb.toString();
     }
 
     public static void main(String[] args) {
-        CommandRoll cr = new CommandRoll();
+        RollArgumentParser rap = new RollArgumentParser();
 
         String[] testStrings = {"6", "-d20"};
 
-        cr.commandMultiplier = 1;
+        rap.commandMultiplier = 1;
 
         // step 1: Separate into distinct chunks
-        ArrayList<String> arguments = cr.splitArguments(testStrings);
+        ArrayList<String> arguments = rap.splitArguments(testStrings);
 
         // Step 2: Determine what kind of argument each argument is
-        ArrayList<RollArgumentType> argumentTypes = cr.getArgumentTypes(arguments);
+        ArrayList<RollArgumentType> argumentTypes = rap.getArgumentTypes(arguments);
 
         // Step 4: Get the roll command from the arguments
-        for (int i = 0; i < cr.commandMultiplier; i++) {
-            Roll roll = cr.getRollFromArguments(arguments, argumentTypes);
+        for (int i = 0; i < rap.commandMultiplier; i++) {
+            Roll roll = rap.getRollFromArguments(arguments, argumentTypes);
 
             // Step 5: Roll the dice and remember the results
             ArrayList<RollSet> rollSets = roll.roll();
 
             // Step 6: Create the string to print to the command sender
-            String rollString = cr.getRollString(rollSets);
+            boolean isFirst = i == 0;
+            String rollString = rap.getRollString("degraffa", arguments, rollSets, isFirst);
 
             // Step 7: Send the roll string to the command sender
             System.out.println(rollString);
