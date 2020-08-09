@@ -5,7 +5,15 @@ Play Dungeons and Dragons in Minecraft! A Spigot server plugin.
 Step 1: Create a spigot server following [these instructions](https://www.spigotmc.org/wiki/spigot-installation/).  
 Step 2: Download the latest jar of MinecraftDnD [here](https://github.com/degraffa/MinecraftDnD/releases).  
 Step 3: Paste **MCDnD.jar** into your spiogt server's **plugins** folder.  
-Step 4: Start the Spigot server. You should see minecraft-dnd enable itself during startup.
+Step 4: Set up user permissions as listed below or just op all players.   
+- Can use another plugin such as [LuckPerms].(https://www.spigotmc.org/resources/luckperms.28140/)  
+Step 5: Start the Spigot server. You should see minecraft-dnd enable itself during startup.
+
+## Permissions:
+|  Permission  | Description                                                                                                       |
+|--------------|-------------------------------------------------------------------------------------------------------------------|
+| mcdnd.player | A player of DnD. Has access to rolling, character creation, and generally anything a player should be able to do. |
+| mcdnd.dm     | A DM of DnD. Has access to everything related to Minecraft DnD.                                                   |
 
 ## Commands
 ### Roll Commands
