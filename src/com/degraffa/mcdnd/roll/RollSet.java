@@ -9,16 +9,20 @@ public class RollSet {
     // the total value of the roll
     private int rollValue;
     // list of each of the rolls
+    private ArrayList<Integer> originalRolls;
+
+    // conditions to apply to the roll total
     private ArrayList<Integer> rolls;
 
-    public RollSet(int rollValue, ArrayList<Integer> rolls) {
-        this.rolls = rolls;
+    public RollSet(int rollValue, ArrayList<Integer> originalRolls, ArrayList<Integer> rolls) {
+        this.originalRolls = originalRolls;
         this.rollValue = rollValue;
+        this.rolls = rolls;
     }
 
     public RollSet(int constant) {
         this.rollValue = constant;
-        this.rolls = new ArrayList<Integer>();
+        this.originalRolls = new ArrayList<Integer>();
     }
 
     public int getRollValue() {
@@ -27,10 +31,12 @@ public class RollSet {
 
     // determines whether this roll set is from a constant or randomly generated
     public boolean isConstant() {
-        return this.rolls.size() == 0;
+        return this.originalRolls.size() == 0;
     }
 
     public ArrayList<Integer> getRolls() {
-        return rolls;
+        return this.rolls;
     }
+
+    public ArrayList<Integer> getOriginalRolls() { return this.originalRolls;}
 }

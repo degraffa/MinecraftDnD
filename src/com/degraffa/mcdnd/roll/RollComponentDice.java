@@ -50,6 +50,10 @@ public class RollComponentDice extends RollComponent {
             rolls.add(rollValue);
         }
 
+        // Keep track of original rolls
+        ArrayList<Integer> originalRolls = new ArrayList<>();
+        originalRolls.addAll(rolls);
+
         // for each condition, apply it to the rolls
         for (RollCondition condition : conditions) {
             applyConditions(condition, rolls);
@@ -63,7 +67,7 @@ public class RollComponentDice extends RollComponent {
         // if we're subtracting this, negate the roll total
         if (this.operation == RollOperation.Subtract) rollTotal *= -1;
 
-        return new RollSet(rollTotal, rolls);
+        return new RollSet(rollTotal, originalRolls, rolls);
     }
 
     // applies the given condition to the roll

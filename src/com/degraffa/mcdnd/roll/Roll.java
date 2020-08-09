@@ -40,16 +40,9 @@ public class Roll {
         ArrayList<RollSet> rollSets = new ArrayList<>();
 
         for (int i = 0; i < rollComponents.size(); i++) {
-            int rollTotal = 0;
-            ArrayList<Integer> rolls = new ArrayList<>();
-
             RollComponent rollComponent = rollComponents.get(i);
-            RollSet rollSet = rollComponent.roll();
 
-            rollTotal += rollSet.getRollValue();
-            rolls.addAll(rollSet.getRolls());
-
-            rollSets.add(new RollSet(rollTotal, rolls));
+            rollSets.add(rollComponent.roll());
         }
 
         return rollSets;

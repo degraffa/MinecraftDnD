@@ -439,12 +439,12 @@ public class CommandRoll implements CommandExecutor {
 
             sb.append("[");
 
-            for (int j = 0; j < rollSet.getRolls().size(); j++) {
-                int roll = rollSet.getRolls().get(j);
+            for (int j = 0; j < rollSet.getOriginalRolls().size(); j++) {
+                int roll = rollSet.getOriginalRolls().get(j);
                 sb.append(roll);
 
                 // if this is not the last roll, add a comma
-                if (j != rollSet.getRolls().size() - 1) {
+                if (j != rollSet.getOriginalRolls().size() - 1) {
                     sb.append(", ");
                 }
             }
@@ -472,7 +472,7 @@ public class CommandRoll implements CommandExecutor {
     public static void main(String[] args) {
         CommandRoll cr = new CommandRoll();
 
-        String[] testStrings = {"2d20H"};
+        String[] testStrings = {"2d20l"};
 
         // step 1: Separate into distinct chunks
         ArrayList<String> arguments = cr.splitArguments(testStrings);
