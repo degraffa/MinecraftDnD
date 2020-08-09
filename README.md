@@ -9,12 +9,12 @@ Step 4: Start the Spigot server. You should see minecraft-dnd enable itself duri
 
 ## Commands
 ### Roll Commands
-|        Command                     |                        Description                                  |   |   |   | 
-|------------------------------------|---------------------------------------------------------------------|---|---|---|
-|  /roll <dice notation>             | Rolls a specified dice roll using d20 notation.                     |   |   |   |
-| /rolldm <dice notation>            | Like roll, but the results are only sent to you and DMs             |   |   |   |
-| /rollme<dice notation>             | Like roll, but the results are only sent to you                     |   |   |   |
-| /rollto <username> <dice notation> | Like roll, but the results are only sent to you and to another user |   |   |   |
+|        Command                     |                        Description                                  | 
+|------------------------------------|---------------------------------------------------------------------|
+|  /roll <dice notation>             | Rolls a specified dice roll using d20 notation.                     |
+| /rolldm <dice notation>            | Like roll, but the results are only sent to you and DMs             |
+| /rollme<dice notation>             | Like roll, but the results are only sent to you                     |
+| /rollto <username> <dice notation> | Like roll, but the results are only sent to you and to another user |
 
 ## Dice Notation
 Unless otherwise noted, bold letters like **A** and **X** represent integers
