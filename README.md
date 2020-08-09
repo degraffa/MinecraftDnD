@@ -1,5 +1,11 @@
 # MinecraftDnD
-Play Dungeons and Dragons in Minecraft!
+Play Dungeons and Dragons in Minecraft! A Spigot server plugin.
+
+## Installation
+Step 1: Create a spigot server following [these instructions](https://www.spigotmc.org/wiki/spigot-installation/).  
+Step 2: Download the latest jar of MinecraftDnD [here](https://github.com/degraffa/MinecraftDnD/releases).  
+Step 3: Paste **MCDnD.jar** into your spiogt server's **plugins** folder.  
+Step 4: Start the Spigot server. You should see minecraft-dnd enable itself during startup.
 
 ## Commands
 ### Roll Commands
