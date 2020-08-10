@@ -5,13 +5,6 @@ import com.degraffa.mcdnd.util.StringUtil;
 import java.util.ArrayList;
 
 public class RollArgumentParser {
-    // maximum amount of dice that can be rolled in a single command
-    public final int MAX_DICE = 1000;
-    // maximum sided die that can be rolled
-    public final int MAX_DIE_SIDES = 10000;
-    // max size of a list in a dice roll
-    public final int MAX_REROLL_VALUES = 4;
-
     // how many times should this command be executed?
     private int commandMultiplier;
 
@@ -197,40 +190,33 @@ public class RollArgumentParser {
     private ArrayList<String> splitDropHighLow(String arg) {
         int dropCharIdx = -1;
 
-        // Whether the amount to drop is given or not
-        boolean dropAmountGiven = false;
-
         // determine where to split
         for (int i = 0; i < arg.length(); i++) {
             char c = arg.charAt(i);
 
             if (c == 'h' || c == 'l' || c == 'H' || c == 'L') {
                 dropCharIdx = i;
-
-                // if this is the last character, break early
-                if (i == arg.length() -1) break;
-
-                char c2 = arg.charAt(i+1);
-                if (Character.isDigit(c2)) {
-                    dropAmountGiven = true;
-                }
                 break;
             }
         }
 
         ArrayList<String> splitArgs = new ArrayList<>();
 
+        // left
         if (dropCharIdx != 0) {
             String left = arg.substring(0, dropCharIdx);
             splitArgs.add(left);
         }
 
-        int endPoint = (dropAmountGiven) ? dropCharIdx+2 : dropCharIdx+1;
-        String dropChar = arg.substring(dropCharIdx, endPoint);
-        splitArgs.add(dropChar);
+        // middle
+        int endPoint = StringUtil.getNextLetterIdx(arg, dropCharIdx+1);
+        String drop = arg.substring(dropCharIdx, endPoint);
+        splitArgs.add(drop);
 
-        if (dropCharIdx != arg.length() -1) {
-            String right = arg.substring(dropCharIdx+1);
+        // right
+        int rightStartIdx = endPoint;
+        if (rightStartIdx <= arg.length() -1) {
+            String right = arg.substring(rightStartIdx);
 
             // recurse down for more conditions
             ArrayList<String> rightSplit = splitConditions(right);
@@ -283,6 +269,8 @@ public class RollArgumentParser {
     }
 
     private RollArgumentType getArgType(String arg, boolean isFirst) {
+        if (arg.length() == 0) return RollArgumentType.None;
+
         char charOne = arg.charAt(0);
 
         // 4 Cases for each string:
@@ -442,20 +430,25 @@ public class RollArgumentParser {
 
         boolean dropHigh = charOne == 'h' || charOne == 'H';
         boolean dropLow = charOne == 'l' || charOne == 'L';
+        boolean reroll = charOne == 'R' || charOne == 'r';
 
-        if (dropHigh || dropLow) {
-            int dropAmount = 1;
-            if (arg.length() > 1) {
-                char charTwo = arg.charAt(1);
-                dropAmount = Integer.parseInt(String.valueOf(charTwo));
-            }
-
-            RollConditionType conditionType = (dropHigh) ? RollConditionType.DropHighest : RollConditionType.DropLowest;
-
-            return new RollCondition(conditionType, dropAmount);
+        // if the argument has more than just one character, that means it must have a value afterwards
+        // Get the value of the value baby
+        int value = 1;
+        if (arg.length() > 1) {
+            int nextLetterIdx = StringUtil.getNextLetterIdx(arg, 1);
+            value = Integer.parseInt(arg.substring(1, nextLetterIdx));
         }
 
-        return new RollCondition(RollConditionType.DropHighest, 1);
+        if (dropHigh || dropLow) {
+            RollConditionType conditionType = (dropHigh) ? RollConditionType.DropHighest : RollConditionType.DropLowest;
+
+            return new RollCondition(conditionType, value);
+        } else if (reroll) {
+            return new RollCondition(RollConditionType.Reroll, value);
+        }
+
+        return new RollCondition(RollConditionType.None, 1);
     }
 
     // Creates a roll operation from an argument representing one
@@ -485,9 +478,19 @@ public class RollArgumentParser {
             // drop high/low
             if (c == 'h' || c == 'H' || c == 'l' || c == 'L') {
                 int dropAmount = 1;
-                if (i < arg.length() - 1 && Character.isDigit(arg.charAt(i+1))) {
-                    dropAmount = Integer.parseInt(arg.substring(i+1, i+2));
+
+                // if more characters, check for drop amount
+                if (i != arg.length() - 1) {
+                    int nextIdx = i+1;
+                    int nextLetterIdx = StringUtil.getNextLetterIdx(arg, nextIdx);
+
+                    // only parse a number if there is one to parse
+                    if (nextLetterIdx != nextIdx) {
+                        String dropAmountString = arg.substring(nextIdx, nextLetterIdx);
+                        dropAmount = Integer.parseInt(dropAmountString);
+                    }
                 }
+
                 RollConditionType conditionType = (c == 'h' || c == 'H') ?
                         RollConditionType.DropHighest : RollConditionType.DropLowest;
 
@@ -576,7 +579,7 @@ public class RollArgumentParser {
     public static void main(String[] args) {
         RollArgumentParser rap = new RollArgumentParser();
 
-        String[] testStrings = {"9999d9999"};
+        String[] testStrings = {"4d6L2"};
 
         rap.commandMultiplier = 1;
 

@@ -6,4 +6,5 @@ public enum RollArgumentType {
     Condition,
     Operation,
     Multiplier,
+    None
 }
