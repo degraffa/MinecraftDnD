@@ -1,6 +1,7 @@
 package com.degraffa.mcdnd.roll;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.concurrent.ThreadLocalRandom;
 
 // Represents a component of a dice roll
@@ -54,6 +55,10 @@ public class RollComponentDice extends RollComponent {
         ArrayList<Integer> originalRolls = new ArrayList<>();
         originalRolls.addAll(rolls);
 
+        // Sort each of the roll lists in descending order
+        Collections.sort(rolls, Collections.reverseOrder());
+//        Collections.sort(originalRolls, Collections.reverseOrder());
+
         // for each condition, apply it to the rolls
         for (RollCondition condition : conditions) {
             applyConditions(condition, rolls);
@@ -74,10 +79,10 @@ public class RollComponentDice extends RollComponent {
     public void applyConditions(RollCondition condition, ArrayList<Integer> rolls) {
         switch (condition.type) {
             case DropHighest:
-                dropHighest(rolls);
+                drop(rolls, condition.conditionValue, true);
                 break;
             case DropLowest:
-                dropLowest(rolls);
+                drop(rolls, condition.conditionValue, false);
                 break;
             case ClampHigh:
                 clampHigh(rolls, condition.conditionValue);
@@ -93,34 +98,17 @@ public class RollComponentDice extends RollComponent {
         }
     }
 
-    private void dropHighest(ArrayList<Integer> rolls) {
-        int highestRoll = -1;
-        int highestIdx = 0;
+    private void drop(ArrayList<Integer> rolls, int dropAmount, boolean dropHigh) {
+        // can't drop more rolls than we have
+        if (dropAmount > rolls.size()) dropAmount = rolls.size();
 
-        for (int i = 0; i < rolls.size(); i++) {
-            int roll = rolls.get(i);
-            if (roll > highestRoll) {
-                highestRoll = roll;
-                highestIdx = i;
-            }
+        // if dropHigh, drop the later elements. If not dropHigh, drop the earlier elements.
+        int dropIdx = (dropHigh) ? 0 : rolls.size()-1;
+
+        // we want to drop [dropAmount] elements
+        for (int i = 0; i < dropAmount; i++) {
+            rolls.remove(dropIdx);
         }
-
-        rolls.remove(highestIdx);
-    }
-
-    private void dropLowest(ArrayList<Integer> rolls) {
-        int lowestRoll = Integer.MAX_VALUE;
-        int lowestIdx = 0;
-
-        for (int i = 0; i < rolls.size(); i++) {
-            int roll = rolls.get(i);
-            if (roll < lowestRoll) {
-                lowestRoll = roll;
-                lowestIdx = i;
-            }
-        }
-
-        rolls.remove(lowestIdx);
     }
 
     private void clampHigh(ArrayList<Integer> rolls, int value) {

@@ -579,7 +579,7 @@ public class RollArgumentParser {
     public static void main(String[] args) {
         RollArgumentParser rap = new RollArgumentParser();
 
-        String[] testStrings = {"4d6L2"};
+        String[] testStrings = {"4d6L"};
 
         rap.commandMultiplier = 1;
 
