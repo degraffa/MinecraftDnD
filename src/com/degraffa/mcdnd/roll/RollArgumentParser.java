@@ -22,13 +22,6 @@ public class RollArgumentParser {
         // Step 2: Determine what kind of argument each argument is
         ArrayList<RollArgumentType> argumentTypes = getArgumentTypes(arguments);
 
-        // TODO: Step 3: Verify that the arguments are syntactically correct
-        boolean goodSyntax = verifyArgumentSyntax(arguments, argumentTypes);
-        // end early if the syntax is bad
-        if (!goodSyntax) {
-            return "Incorrect roll syntax";
-        }
-
         StringBuilder sb = new StringBuilder();
         // Step 4: Get the roll command from the arguments
         for (int i = 0; i < this.commandMultiplier; i++) {
@@ -39,7 +32,7 @@ public class RollArgumentParser {
 
             // Step 6: Create the string to print to the command sender
             boolean isFirst = i == 0;
-            String rollString = getRollString(name, strings, arguments, rollSets, isFirst);
+            String rollString = getRollString(name, strings, rollSets, isFirst);
 
             // Step 7: Send the roll string to the command sender
             sb.append(rollString);
@@ -269,11 +262,6 @@ public class RollArgumentParser {
         return RollArgumentType.Condition;
     }
 
-    // Returns true if each of the arguments is syntactically correct, false otherwise
-    private boolean verifyArgumentSyntax(ArrayList<String> args, ArrayList<RollArgumentType> argumentTypes) {
-        return true;
-    }
-
     // Creates a Roll object from given arguments
     private Roll getRollFromArguments(ArrayList<String> args, ArrayList<RollArgumentType> argTypes) {
         ArrayList<RollComponent> rollComponents = new ArrayList<>();
@@ -489,7 +477,7 @@ public class RollArgumentParser {
         return noneCondition;
     }
 
-    private String getRollString(String name, String[] strings, ArrayList<String> args, ArrayList<RollSet> rollSets, boolean isFirst) {
+    private String getRollString(String name, String[] strings, ArrayList<RollSet> rollSets, boolean isFirst) {
         StringBuilder sb = new StringBuilder();
 
         // Step 1: Print Command if this is the first one
@@ -582,7 +570,7 @@ public class RollArgumentParser {
 
             // Step 6: Create the string to print to the command sender
             boolean isFirst = i == 0;
-            String rollString = rap.getRollString("degraffa", testStrings, arguments, rollSets, isFirst);
+            String rollString = rap.getRollString("degraffa", testStrings, rollSets, isFirst);
 
             // Step 7: Send the roll string to the command sender
             System.out.println(rollString);
