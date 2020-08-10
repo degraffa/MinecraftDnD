@@ -13,13 +13,13 @@ Step 4: Set up user permissions as listed below or just op all players.
 
 Step 5: Start the Spigot server. You should see minecraft-dnd enable itself during startup.
 
-## Permissions:
+## Permissions  
 |  Permission  | Description                                                                                                       |
 |--------------|-------------------------------------------------------------------------------------------------------------------|
 | mcdnd.player | A player of DnD. Has access to rolling, character creation, and generally anything a player should be able to do. |
 | mcdnd.dm     | A DM of DnD. Has access to everything related to Minecraft DnD.                                                   |
 
-## Commands
+## Commands  
 ### Roll Commands
 |        Command                     |                        Description                                  | 
 |------------------------------------|---------------------------------------------------------------------|
