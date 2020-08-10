@@ -83,12 +83,6 @@ public class RollComponentDice extends RollComponent {
             case DropLowest:
                 drop(rolls, condition.conditionValue, false);
                 break;
-            case ClampHigh:
-                clampHigh(rolls, condition.conditionValue);
-                break;
-            case ClampLow:
-                clampLow(rolls, condition.conditionValue);
-                break;
             case Reroll:
                 reroll(rolls, originalRolls, condition.conditionValue);
                 break;
@@ -107,24 +101,6 @@ public class RollComponentDice extends RollComponent {
         // we want to drop [dropAmount] elements
         for (int i = 0; i < dropAmount; i++) {
             rolls.remove(dropIdx);
-        }
-    }
-
-    private void clampHigh(ArrayList<Integer> rolls, int value) {
-        for (int i = 0; i < rolls.size(); i++) {
-            int roll = rolls.get(i);
-            if (roll > value) {
-                rolls.set(i, value);
-            }
-        }
-    }
-
-    private void clampLow(ArrayList<Integer> rolls, int value) {
-        for (int i = 0; i < rolls.size(); i++) {
-            int roll = rolls.get(i);
-            if (roll < value) {
-                rolls.set(i, value);
-            }
         }
     }
 
