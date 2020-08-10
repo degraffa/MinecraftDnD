@@ -48,10 +48,15 @@ public class RollArgumentParser {
 
             // Step 6: Create the string to print to the command sender
             boolean isFirst = i == 0;
-            String rollString = getRollString(name, arguments, rollSets, isFirst);
+            String rollString = getRollString(name, strings, arguments, rollSets, isFirst);
 
             // Step 7: Send the roll string to the command sender
             sb.append(rollString);
+
+            // Step 8: Add a new line in between commands if there is more than one
+            if (this.commandMultiplier > 1 && i != this.commandMultiplier-1) {
+                sb.append("\n");
+            }
         }
 
         return sb.toString();
@@ -84,15 +89,7 @@ public class RollArgumentParser {
             char c = arg.charAt(i);
 
             if (c == '+' || c == '-') {
-                // if this isn't the last character, only split if the next character isn't 'd'
-                if (i != arg.length() - 1) {
-                    char c2 = arg.charAt(i + 1);
-                    if (c2 != 'd') {
-                        splitOpArgs.addAll(splitPlusMinus(arg, i));
-                    }
-                } else {
-                    splitOpArgs.addAll(splitPlusMinus(arg, i));
-                }
+                splitOpArgs.addAll(splitPlusMinus(arg, i));
                 break;
             }
         }
@@ -105,8 +102,11 @@ public class RollArgumentParser {
         // Now that we have split on +/-, split on condition (in splitArgs)
         ArrayList<String> splitCondArgs = new ArrayList<>();
         for (String s : splitOpArgs) {
-            // don't worry about it if its just a +/-
-            if (s.length() == 1) continue;
+            // don't worry about it if its just a single character
+            if (s.length() == 1) {
+                splitCondArgs.add(s);
+                continue;
+            }
 
             splitCondArgs.addAll(splitConditions(s));
         }
@@ -446,7 +446,7 @@ public class RollArgumentParser {
         return noneCondition;
     }
 
-    private String getRollString(String name, ArrayList<String> args, ArrayList<RollSet> rollSets, boolean isFirst) {
+    private String getRollString(String name, String[] strings, ArrayList<String> args, ArrayList<RollSet> rollSets, boolean isFirst) {
         StringBuilder sb = new StringBuilder();
 
         // Step 1: Print Command if this is the first one
@@ -454,7 +454,7 @@ public class RollArgumentParser {
             sb.append(name);
             sb.append(" rolled ");
 
-            for (String arg : args) {
+            for (String arg : strings) {
                 sb.append(arg);
                 sb.append(" ");
             }
@@ -492,7 +492,7 @@ public class RollArgumentParser {
 
             sb.append("]");
 
-            // if there are more non-constnat rollsets after this, add a comma
+            // if there are more non-constant rollsets after this, add a comma
             if (i != rollSets.size() - 1 && !rollSets.get(i+1).isConstant()) {
                 sb.append(", ");
             }
@@ -511,9 +511,11 @@ public class RollArgumentParser {
     }
 
     public static void main(String[] args) {
+        System.out.println(Character.isDigit('+'));
+
         RollArgumentParser rap = new RollArgumentParser();
 
-        String[] testStrings = {"6", "-d20"};
+        String[] testStrings = {"6", "4d6L+2"};
 
         rap.commandMultiplier = 1;
 
@@ -532,7 +534,7 @@ public class RollArgumentParser {
 
             // Step 6: Create the string to print to the command sender
             boolean isFirst = i == 0;
-            String rollString = rap.getRollString("degraffa", arguments, rollSets, isFirst);
+            String rollString = rap.getRollString("degraffa", testStrings, arguments, rollSets, isFirst);
 
             // Step 7: Send the roll string to the command sender
             System.out.println(rollString);
