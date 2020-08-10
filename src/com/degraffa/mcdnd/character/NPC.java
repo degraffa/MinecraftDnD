@@ -1,7 +1,5 @@
 package com.degraffa.mcdnd.character;
 
-import com.degraffa.mcdnd.character.feat.Feat;
-
 import java.util.ArrayList;
 
 // Super class for later classes
@@ -11,28 +9,33 @@ public class NPC {
 
     private CreatureType creatureType;
 
-    ArrayList<Feat> feats;
-    ArrayList<Attack> attacks;
+    private StatBlock statBlock;
 
-    public NPC(String name, int maxHP, int str, int dex, int con, int wis, int cha) {
+    ArrayList<Feat> feats;
+    ArrayList<Item> items;
+
+    public NPC(String name, CreatureType creatureType, StatBlock statBlock) {
+        this.name = name;
+
+        this.creatureType = creatureType;
+        this.statBlock = statBlock;
 
         feats = new ArrayList<>();
-        attacks = new ArrayList<>();
+        items = new ArrayList<>();
     }
 
-    public String getName() {
-        return name;
-    }
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
 
-    public void setName(String name) {
-        this.name = name;
-    }
+    public CreatureType getCreatureType() { return creatureType; }
+    public void setCreatureType(CreatureType creatureType) { this.creatureType = creatureType; }
 
-    public CreatureType getCreatureType() {
-        return creatureType;
-    }
+    public StatBlock getStatBlock() { return this.statBlock; }
+    public void setStatBlock(StatBlock statBlock) { this.statBlock = statBlock; }
 
-    public void setCreatureType(CreatureType creatureType) {
-        this.creatureType = creatureType;
-    }
+    public ArrayList<Feat> getFeats() { return this.feats; }
+    public void addFeat(Feat feat) { this.feats.add(feat); }
+
+    public ArrayList<Item> getItems() { return this.items; }
+    public void additem(Item item) { this.items.add(item); }
 }

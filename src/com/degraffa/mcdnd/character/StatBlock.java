@@ -1,6 +1,6 @@
 package com.degraffa.mcdnd.character;
 
-public class CharacterStats {
+public class StatBlock {
     private int hitPoints;
     private int hitPointMax;
     private int tempHitPoints;
@@ -51,7 +51,7 @@ public class CharacterStats {
 
     private int passivePerception;
 
-    public CharacterStats(int maxHP, int AC, int speed, int flySpeed, int swimSpeed, int str, int dex, int con, int intel, int wis, int cha) {
+    public StatBlock(int maxHP, int AC, int speed, int flySpeed, int swimSpeed, int str, int dex, int con, int intel, int wis, int cha) {
         this.hitPointMax = maxHP;
         this.hitPoints = maxHP;
 

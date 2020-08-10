@@ -1,4 +1,4 @@
 package com.degraffa.mcdnd.character;
 
-public class Attack {
+public class Effect {
 }
