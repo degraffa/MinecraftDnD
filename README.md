@@ -31,20 +31,38 @@ Step 5: Start the Spigot server. You should see minecraft-dnd enable itself duri
 ## Dice Notation
 Unless otherwise noted, bold letters like **A** and **X** represent integers
 
+### Dice Sets
+Dice sets are sets of dice to be rolled.  
+Dice sets can be added together.  
+Dice sets can have conditions added to them.  
+
+#### Examples
 - 4d20 - Rolls four 20 sided die
     - Pattern: **A**d**X**
 - d6 - Rolls a single 6 sided die
     - Pattern: d**X**
 - 1d20 + 1d6 - Rolls one 20 sided die and 1 6 sided die
-    - Pattern: +/- in between dice sets
+    - Pattern: +/- in between dice sets (adds or subtracts the next dice set)
+- 5 - Adds 5 to the total roll
+    - Pattern: **X** adds **X** to the total roll
+    
+### Conditions
+Conditions alter the results of the rolls in some way.  
+Conditions are placed after dice sets and before operations.  
+Conditions can be chained together on the same dice set.  
+  
+  #### Examples
 - 3d8H - Rolls three 8 sided dice and drops the highest result
-    - Pattern 1: [h/H] after a dice set
+    - Pattern 1: [h/H] after a dice set (drops highest roll)
     - Pattern 2: [h/H]**X** after a dice set
         - Drops the highest **X** rolls
 - 4d6L - Rolls four 6 sided dice and drops the lowest result
-    - Pattern 1: [l/L] after dice set
+    - Pattern 1: [l/L] after dice set (drops lowest roll)
     - Pattern 2: [l/L]**X** after dice set
         - Drops the lowest **X** rolls
+- 2d6R1R2 - Rolls two 6 sided dice and rerolls 1's and 2's
+    - Pattern 1: [r/R] after dice set (rerolls 1's)
+    - Pattern 2: [r/R]**X** after dice set (rerolls **X**'s)
 - +d20 - Rolls a 20 sided die at advantage
     - Pattern: +d**X**
     - Macro for 2d**X**L
