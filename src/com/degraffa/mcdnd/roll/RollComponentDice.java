@@ -79,15 +79,6 @@ public class RollComponentDice extends RollComponent {
             case DropLowest:
                 dropLowest(rolls);
                 break;
-            case DropLessThan:
-                dropLessThan(rolls, condition.conditionValue);
-                break;
-            case DropEqualTo:
-                dropEqualTo(rolls, condition.conditionValue);
-                break;
-            case DropGreaterThan:
-                dropGreaterThan(rolls, condition.conditionValue);
-                break;
             case ClampHigh:
                 clampHigh(rolls, condition.conditionValue);
                 break;
@@ -132,33 +123,6 @@ public class RollComponentDice extends RollComponent {
         rolls.remove(lowestIdx);
     }
 
-    private void dropLessThan(ArrayList<Integer> rolls, int value) {
-        for (int i = 0; i < rolls.size(); i++) {
-            int roll = rolls.get(i);
-            if (roll < value) {
-                rolls.remove(i);
-            }
-        }
-    }
-
-    private void dropEqualTo(ArrayList<Integer> rolls, int value) {
-        for (int i = 0; i < rolls.size(); i++) {
-            int roll = rolls.get(i);
-            if (roll == value) {
-                rolls.remove(i);
-            }
-        }
-    }
-
-    private void dropGreaterThan(ArrayList<Integer> rolls, int value) {
-        for (int i = 0; i < rolls.size(); i++) {
-            int roll = rolls.get(i);
-            if (roll > value) {
-                rolls.remove(i);
-            }
-        }
-    }
-
     private void clampHigh(ArrayList<Integer> rolls, int value) {
         for (int i = 0; i < rolls.size(); i++) {
             int roll = rolls.get(i);
@@ -177,6 +141,7 @@ public class RollComponentDice extends RollComponent {
         }
     }
 
+    // rerolls the die if it lands on a given value, a maximum of one reroll
     private void reroll(ArrayList<Integer> rolls, int value) {
         for (int i = 0; i < rolls.size(); i++) {
             int roll = rolls.get(i);

@@ -1,5 +1,7 @@
 package com.degraffa.mcdnd.util;
 
+import java.util.ArrayList;
+
 public class StringUtil {
     public static boolean isNumeric(String s) {
         boolean isNumeric = true;
@@ -18,5 +20,11 @@ public class StringUtil {
         }
 
         return stringArr;
+    }
+
+    public static ArrayList<String> getSingleStringArray(String s) {
+        ArrayList<String> strings = new ArrayList<>();
+        strings.add(s);
+        return strings;
     }
 }

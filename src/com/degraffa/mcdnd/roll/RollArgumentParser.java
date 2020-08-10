@@ -1,8 +1,6 @@
 package com.degraffa.mcdnd.roll;
 
 import com.degraffa.mcdnd.util.StringUtil;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandSender;
 
 import java.util.ArrayList;
 
@@ -183,6 +181,9 @@ public class RollArgumentParser {
             case DropLowest:
                 splitArgs.addAll(splitDropHighLow(arg));
                 break;
+            case Reroll:
+                splitArgs.addAll(splitReroll(arg));
+                break;
             // if no conditions, don't split anything
             case None:
             default:
@@ -239,6 +240,33 @@ public class RollArgumentParser {
         return splitArgs;
     }
 
+
+    // Splits an argument with a reroll condition
+    private ArrayList<String> splitReroll(String arg) {
+        ArrayList<String> splitArgs = new ArrayList<>();
+
+        int rCharIdx = arg.indexOf('R');
+        if (rCharIdx == -1) {
+            rCharIdx = arg.indexOf('r');
+            // return early if no reroll character
+            if (rCharIdx == -1) {
+                return StringUtil.getSingleStringArray(arg);
+            }
+        }
+
+        // Return early if it doesn't specify any numbers
+        if (rCharIdx == arg.length()-1) return StringUtil.getSingleStringArray(arg);
+
+        // add the left side, no recursion needed
+        String left = arg.substring(0, rCharIdx);
+        splitArgs.add(left);
+
+        // the following characters should be a series of numbers, up until the string ends or a new condition begins
+        int numRerollDigits = 0;
+        char c = arg.charAt(rCharIdx+1);
+        return splitArgs;
+    }
+
     // Returns the type of each of the arguments
     private ArrayList<RollArgumentType> getArgumentTypes(ArrayList<String> args) {
 //        ArrayList<RollComponent> rollComponents = new ArrayList<>();
@@ -291,6 +319,9 @@ public class RollArgumentParser {
     private Roll getRollFromArguments(ArrayList<String> args, ArrayList<RollArgumentType> argTypes) {
         ArrayList<RollComponent> rollComponents = new ArrayList<>();
 
+        // keep track of dice components in case we go past the max
+        int numDiceComponents = 0;
+
         RollOperation nextRollOp = RollOperation.Add;
         for (int i = 0; i < args.size(); i++) {
             String arg = args.get(i);
@@ -300,10 +331,16 @@ public class RollArgumentParser {
                 case DiceComponent:
                     RollComponentDice rollComponent = rollComponentDiceFromString(arg);
 
+                    // don't process this if it exceeds any of the maximums
+                    boolean isValid = isValidDiceComponent(rollComponent, numDiceComponents);
+                    if (!isValid) break;
+
                     rollComponent.setRollOperation(nextRollOp);
                     nextRollOp = RollOperation.Add;
 
                     rollComponents.add(rollComponent);
+
+                    numDiceComponents += 1;
                     break;
                 case ConstantComponent:
                     RollComponentConstant rollComponentConstant = rollComponentConstantFromString(arg);
@@ -343,6 +380,17 @@ public class RollArgumentParser {
         }
 
         return new Roll(rollComponents);
+    }
+
+    private boolean isValidDiceComponent(RollComponentDice diceComponent, int numDiceComponents) {
+        boolean validNumSides = diceComponent.getNumSides() <= RollConstants.MAX_DIE_SIDES;
+        boolean validNumDice = diceComponent.getNumDice() <= RollConstants.MAX_DICE;
+        boolean validNumComponents = numDiceComponents <= RollConstants.MAX_DICE_COMPONENTS;
+
+        validNumDice = validNumDice && diceComponent.getNumDice() > 0;
+        validNumSides = validNumSides && diceComponent.getNumSides() > 0;
+
+        return validNumSides && validNumDice && validNumComponents;
     }
 
     // Creates a dice roll component from an argument representing one (ex. 1d20)
@@ -513,7 +561,14 @@ public class RollArgumentParser {
             sb.append(constantSum);
         }
 
-        sb.append(" Total: ").append(rollTotal);
+        // put the total on a new line if the string before was too long
+        if (sb.length() > RollConstants.MAX_CHARS_FOR_ONE_LINE) {
+            sb.append("\n");
+        } else {
+            // otherwise, just separate it by a space
+            sb.append(" ");
+        }
+        sb.append("Total: ").append(rollTotal);
 
         return sb.toString();
     }
@@ -521,7 +576,7 @@ public class RollArgumentParser {
     public static void main(String[] args) {
         RollArgumentParser rap = new RollArgumentParser();
 
-        String[] testStrings = {"+d20"};
+        String[] testStrings = {"9999d9999"};
 
         rap.commandMultiplier = 1;
 
