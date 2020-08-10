@@ -81,7 +81,7 @@ public class RollArgumentParser {
 
             if (c == '+' || c == '-') {
                 // don't split if this is part of +dX / -dX
-                if (i == 0 && arg.length() > 1) {
+                if (i == 0) {
                     char c2 = arg.charAt(i+1);
                     if (c2 != 'd') {
                         splitOpArgs.addAll(splitPlusMinus(arg, i));
@@ -208,12 +208,11 @@ public class RollArgumentParser {
         }
 
         // middle
-        int endPoint = StringUtil.getNextLetterIdx(arg, dropCharIdx+1);
-        String conditionString = arg.substring(dropCharIdx, endPoint);
+        int rightStartIdx = StringUtil.getNextLetterIdx(arg, dropCharIdx+1);
+        String conditionString = arg.substring(dropCharIdx, rightStartIdx);
         splitArgs.add(conditionString);
 
         // right
-        int rightStartIdx = endPoint;
         if (rightStartIdx <= arg.length() -1) {
             String right = arg.substring(rightStartIdx);
 
@@ -564,7 +563,7 @@ public class RollArgumentParser {
     public static void main(String[] args) {
         RollArgumentParser rap = new RollArgumentParser();
 
-        String[] testStrings = {"6", "1d20"};
+        String[] testStrings = {"6", "1d20H"};
 
         rap.commandMultiplier = 1;
 

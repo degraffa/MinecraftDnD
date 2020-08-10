@@ -10,7 +10,8 @@ public class RollComponentDice extends RollComponent {
     private int numSides;
 
     // conditions types
-    private ArrayList<RollCondition> conditions;
+    @SuppressWarnings("final")
+    private final ArrayList<RollCondition> conditions;
 
     public RollComponentDice(int numDice, int numSides) {
         setDice(numDice, numSides);
@@ -26,10 +27,6 @@ public class RollComponentDice extends RollComponent {
     }
 
     public ArrayList<RollCondition> getConditions() { return conditions; }
-    public void setConditions(ArrayList<RollCondition> conditions) { this.conditions = conditions; }
-    public void addCondition(RollConditionType conditionType, int conditionValue) {
-        conditions.add(new RollCondition(conditionType, conditionValue));
-    }
     public void addCondition(RollCondition condition) {
         conditions.add(condition);
     }
@@ -52,11 +49,10 @@ public class RollComponentDice extends RollComponent {
         }
 
         // Keep track of original rolls
-        ArrayList<Integer> originalRolls = new ArrayList<>();
-        originalRolls.addAll(rolls);
+        ArrayList<Integer> originalRolls = new ArrayList<>(rolls);
 
         // Sort each the roll list in descending order for later use
-        Collections.sort(rolls, Collections.reverseOrder());
+        rolls.sort(Collections.reverseOrder());
 
         // for each condition, apply it to the rolls
         for (RollCondition condition : conditions) {

@@ -29,12 +29,14 @@ Step 5: Start the Spigot server. You should see minecraft-dnd enable itself duri
 | /rollto <username> <dice notation> | Like roll, but the results are only sent to you and to another user |
 
 ## Dice Notation
-Unless otherwise noted, bold letters like **A** and **X** represent integers
+- Dice Notation describes a set of rules for rolling some dice and using the numbers in a simple equation.
+- If you type incorrect dice notation, the plugin will probably throw an error or give an inaccurate result.
+- Unless otherwise noted, bold letters like **A** and **X** represent integers.
 
 ### Dice Sets
-Dice sets are sets of dice to be rolled.  
-Dice sets can be added together.  
-Dice sets can have conditions added to them.  
+- Sets of dice to be rolled.  
+- Can be added together.  
+- Can have conditions added to them.  
 
 #### Examples
 - 4d20 - Rolls four 20 sided die
@@ -47,9 +49,9 @@ Dice sets can have conditions added to them.
     - Pattern: **X** adds **X** to the total roll
     
 ### Conditions
-Conditions alter the results of the rolls in some way.  
-Conditions are placed after dice sets and before operations.  
-Conditions can be chained together on the same dice set.  
+- Alter the results of the rolls in some way.  
+- Placed after dice sets and before +/- operations.  
+- Can be chained together on the same dice set.  
   
   #### Examples
 - 3d8H - Rolls three 8 sided dice and drops the highest result
