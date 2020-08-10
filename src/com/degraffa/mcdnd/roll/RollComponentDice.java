@@ -55,13 +55,12 @@ public class RollComponentDice extends RollComponent {
         ArrayList<Integer> originalRolls = new ArrayList<>();
         originalRolls.addAll(rolls);
 
-        // Sort each of the roll lists in descending order
+        // Sort each the roll list in descending order for later use
         Collections.sort(rolls, Collections.reverseOrder());
-//        Collections.sort(originalRolls, Collections.reverseOrder());
 
         // for each condition, apply it to the rolls
         for (RollCondition condition : conditions) {
-            applyConditions(condition, rolls);
+            applyConditions(condition, rolls, originalRolls);
         }
 
         // Calculate roll total after conditions are applied
@@ -76,7 +75,7 @@ public class RollComponentDice extends RollComponent {
     }
 
     // applies the given condition to the roll
-    public void applyConditions(RollCondition condition, ArrayList<Integer> rolls) {
+    public void applyConditions(RollCondition condition, ArrayList<Integer> rolls, ArrayList<Integer> originalRolls) {
         switch (condition.type) {
             case DropHighest:
                 drop(rolls, condition.conditionValue, true);
@@ -91,7 +90,7 @@ public class RollComponentDice extends RollComponent {
                 clampLow(rolls, condition.conditionValue);
                 break;
             case Reroll:
-                reroll(rolls, condition.conditionValue);
+                reroll(rolls, originalRolls, condition.conditionValue);
                 break;
             default:
                 break;
@@ -130,12 +129,15 @@ public class RollComponentDice extends RollComponent {
     }
 
     // rerolls the die if it lands on a given value, a maximum of one reroll
-    private void reroll(ArrayList<Integer> rolls, int value) {
+    private void reroll(ArrayList<Integer> rolls, ArrayList<Integer> originalRolls, int value) {
         for (int i = 0; i < rolls.size(); i++) {
             int roll = rolls.get(i);
             if (roll == value) {
                 int newRoll = rollDie();
                 rolls.set(i, newRoll);
+
+                int ogIdx = originalRolls.indexOf(roll);
+                originalRolls.set(ogIdx, newRoll);
             }
         }
     }

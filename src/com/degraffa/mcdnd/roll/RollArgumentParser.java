@@ -172,10 +172,8 @@ public class RollArgumentParser {
         switch(condition.type) {
             case DropHighest:
             case DropLowest:
-                splitArgs.addAll(splitDropHighLow(arg));
-                break;
             case Reroll:
-                splitArgs.addAll(splitReroll(arg));
+                splitArgs.addAll(splitOneCharCondition(arg));
                 break;
             // if no conditions, don't split anything
             case None:
@@ -187,14 +185,15 @@ public class RollArgumentParser {
         return splitArgs;
     }
 
-    private ArrayList<String> splitDropHighLow(String arg) {
+    // Splits arguments which contain a condition with one character
+    private ArrayList<String> splitOneCharCondition(String arg) {
         int dropCharIdx = -1;
 
         // determine where to split
         for (int i = 0; i < arg.length(); i++) {
             char c = arg.charAt(i);
 
-            if (c == 'h' || c == 'l' || c == 'H' || c == 'L') {
+            if (c == 'h' || c == 'l' || c == 'H' || c == 'L' || c == 'R' || c == 'r') {
                 dropCharIdx = i;
                 break;
             }
@@ -210,8 +209,8 @@ public class RollArgumentParser {
 
         // middle
         int endPoint = StringUtil.getNextLetterIdx(arg, dropCharIdx+1);
-        String drop = arg.substring(dropCharIdx, endPoint);
-        splitArgs.add(drop);
+        String conditionString = arg.substring(dropCharIdx, endPoint);
+        splitArgs.add(conditionString);
 
         // right
         int rightStartIdx = endPoint;
@@ -223,33 +222,6 @@ public class RollArgumentParser {
             splitArgs.addAll(rightSplit);
         }
 
-        return splitArgs;
-    }
-
-
-    // Splits an argument with a reroll condition
-    private ArrayList<String> splitReroll(String arg) {
-        ArrayList<String> splitArgs = new ArrayList<>();
-
-        int rCharIdx = arg.indexOf('R');
-        if (rCharIdx == -1) {
-            rCharIdx = arg.indexOf('r');
-            // return early if no reroll character
-            if (rCharIdx == -1) {
-                return StringUtil.getSingleStringArray(arg);
-            }
-        }
-
-        // Return early if it doesn't specify any numbers
-        if (rCharIdx == arg.length()-1) return StringUtil.getSingleStringArray(arg);
-
-        // add the left side, no recursion needed
-        String left = arg.substring(0, rCharIdx);
-        splitArgs.add(left);
-
-        // the following characters should be a series of numbers, up until the string ends or a new condition begins
-        int numRerollDigits = 0;
-        char c = arg.charAt(rCharIdx+1);
         return splitArgs;
     }
 
@@ -475,9 +447,9 @@ public class RollArgumentParser {
         for (int i = 0; i < arg.length(); i++) {
             char c = arg.charAt(i);
 
-            // drop high/low
-            if (c == 'h' || c == 'H' || c == 'l' || c == 'L') {
-                int dropAmount = 1;
+            // Conditions with one character and possibly some numbers, if no numbers, default of 1
+            if (c == 'h' || c == 'H' || c == 'l' || c == 'L' || c == 'R' || c == 'r') {
+                int conditionValue = 1;
 
                 // if more characters, check for drop amount
                 if (i != arg.length() - 1) {
@@ -487,17 +459,30 @@ public class RollArgumentParser {
                     // only parse a number if there is one to parse
                     if (nextLetterIdx != nextIdx) {
                         String dropAmountString = arg.substring(nextIdx, nextLetterIdx);
-                        dropAmount = Integer.parseInt(dropAmountString);
+                        conditionValue = Integer.parseInt(dropAmountString);
                     }
                 }
 
-                RollConditionType conditionType = (c == 'h' || c == 'H') ?
-                        RollConditionType.DropHighest : RollConditionType.DropLowest;
+                RollConditionType conditionType = RollConditionType.None;
+                switch(c) {
+                    case 'H':
+                    case 'h':
+                        conditionType = RollConditionType.DropHighest;
+                        break;
+                    case 'L':
+                    case 'l':
+                        conditionType = RollConditionType.DropLowest;
+                        break;
+                    case 'R':
+                    case 'r':
+                        conditionType = RollConditionType.Reroll;
+                        break;
+                }
 
-                return new RollCondition(conditionType, dropAmount);
+                return new RollCondition(conditionType, conditionValue);
             }
             // we've reached another component, end now
-            if (c == '+' || c == '-') {
+            else if (c == '+' || c == '-') {
                 return noneCondition;
             }
         }
@@ -579,7 +564,7 @@ public class RollArgumentParser {
     public static void main(String[] args) {
         RollArgumentParser rap = new RollArgumentParser();
 
-        String[] testStrings = {"4d6L"};
+        String[] testStrings = {"6d6R"};
 
         rap.commandMultiplier = 1;
 
@@ -603,6 +588,5 @@ public class RollArgumentParser {
             // Step 7: Send the roll string to the command sender
             System.out.println(rollString);
         }
-
     }
 }
