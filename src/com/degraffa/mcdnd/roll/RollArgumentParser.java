@@ -89,7 +89,15 @@ public class RollArgumentParser {
             char c = arg.charAt(i);
 
             if (c == '+' || c == '-') {
-                splitOpArgs.addAll(splitPlusMinus(arg, i));
+                // don't split if this is part of +dX / -dX
+                if (i == 0 && arg.length() > 1) {
+                    char c2 = arg.charAt(i+1);
+                    if (c2 != 'd') {
+                        splitOpArgs.addAll(splitPlusMinus(arg, i));
+                    }
+                } else {
+                    splitOpArgs.addAll(splitPlusMinus(arg, i));
+                }
                 break;
             }
         }
@@ -511,11 +519,9 @@ public class RollArgumentParser {
     }
 
     public static void main(String[] args) {
-        System.out.println(Character.isDigit('+'));
-
         RollArgumentParser rap = new RollArgumentParser();
 
-        String[] testStrings = {"6", "4d6L+2"};
+        String[] testStrings = {"+d20"};
 
         rap.commandMultiplier = 1;
 
